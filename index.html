@@ -159,7 +159,7 @@ const SOLID=t=>t===0||t===8||t===3||t===6||t===11||t===12||t===14||t===16||t===2
   // ---- clearings ----
   for(let y=88;y<=92;y++)for(let x=118;x<=122;x++)if(SOLID(T(x,y))&&T(x,y)!==8)setT(x,y,2);
   [[168,142],[180,40],[66,44],[120,36],[168,141],[180,41],[66,45],[120,37],[121,36],[119,36],
-   [56,137],[56,138],[112,33],[112,34],[212,54],[212,55],[124,88],[124,89],[60,41],[60,42],
+   [56,137],[56,138],[112,33],[112,34],[212,54],[212,55],[138,90],[138,91],[60,41],[60,42],
    [166,139],[166,140],[56,96],[56,97],[55,96],[57,96]].forEach(([x,y])=>{
     const t=T(x,y);if(t===3||t===6||t===11||t===12||t===14)setT(x,y,t===14?19:2);
   });
@@ -294,7 +294,7 @@ const npcs=[
    locked:["I am Delta, Grand Champion","of this island.","Defeat all six champions,","then return to me.","Badges: "],
    crown:["Six badges... every trial,","every champion... bested.","By the ancient right of this","island, I name YOU...","THE NEW GRAND CHAMPION!"],
    done:["The island is yours, Champion."]},
-  {id:'v1',villager:true,name:'Old Tomo',x:124,y:88,color:'#8a7a5a',
+  {id:'v1',villager:true,name:'Old Tomo',x:138,y:90,color:'#8a7a5a',
    lines:["They say the beast on the","dark isle only looks scary...","Maybe someone brave could","calm it down?"]},
   {id:'v2',villager:true,name:'Hana',x:60,y:41,color:'#c58ab0',
    lines:["Fresh fish! Straight off the","boats!","Did you know you can walk","onto every boat in the bay?"]},
