@@ -2,11 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Adventure Island</title>
 <style>
-  html,body{margin:0;height:100%;background:#1a1c2c;display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:monospace}
+  html,body{margin:0;height:100%;background:#1a1c2c;display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:monospace;overscroll-behavior:none}
   canvas{image-rendering:pixelated;image-rendering:crisp-edges;background:#3978a8;
-    width:min(100vw,calc(100vh*4/3));height:min(100vh,calc(100vw*3/4))}
+    width:min(100vw,calc(100vh*4/3));height:min(100vh,calc(100vw*3/4));
+    touch-action:none;-webkit-tap-highlight-color:transparent}
 </style>
 </head>
 <body>
@@ -186,6 +188,56 @@ const dirDown={
   rt:()=>down('ArrowRight')||down('d')||down('D')
 };
 const action=()=>pressed(' ')||pressed('Enter');
+
+// ---------- touch controls (phones & tablets — desktop unchanged) ----------
+const isTouch=('ontouchstart' in window)||((navigator.maxTouchPoints||0)>0);
+const TZ={dpad:{cx:64,cy:296,r:50},a:{cx:434,cy:302,r:28},m:{cx:450,cy:96,r:16}};
+function handleTouches(e){
+  e.preventDefault();
+  const rect=cv.getBoundingClientRect();
+  const scx=480/rect.width,scy=360/rect.height;
+  const want={up:false,dn:false,lf:false,rt:false,a:false,m:false};
+  for(const t of e.touches){
+    const x=(t.clientX-rect.left)*scx,y=(t.clientY-rect.top)*scy;
+    const dxp=x-TZ.dpad.cx,dyp=y-TZ.dpad.cy;
+    if(Math.hypot(dxp,dyp)<TZ.dpad.r+22){
+      if(Math.abs(dxp)>Math.abs(dyp)*0.5){if(dxp<-8)want.lf=true;else if(dxp>8)want.rt=true}
+      if(Math.abs(dyp)>Math.abs(dxp)*0.5){if(dyp<-8)want.up=true;else if(dyp>8)want.dn=true}
+    }
+    else if(Math.hypot(x-TZ.a.cx,y-TZ.a.cy)<TZ.a.r+16)want.a=true;
+    else if(Math.hypot(x-TZ.m.cx,y-TZ.m.cy)<TZ.m.r+12)want.m=true;
+    else if(state==='title')want.a=true; // tap anywhere to start
+  }
+  const mapKD=(cond,key)=>{
+    if(cond&&!keys[key]){pressBuf[key]=true;keys[key]=true}
+    if(!cond&&keys[key])keys[key]=false;
+  };
+  mapKD(want.up,'ArrowUp');mapKD(want.dn,'ArrowDown');
+  mapKD(want.lf,'ArrowLeft');mapKD(want.rt,'ArrowRight');
+  mapKD(want.a,' ');mapKD(want.m,'m');
+}
+if(isTouch){
+  for(const ev of ['touchstart','touchmove','touchend','touchcancel'])
+    cv.addEventListener(ev,handleTouches,{passive:false});
+}
+function drawTouchUI(){
+  if(!isTouch)return;
+  const c=TZ.dpad;
+  ctx.globalAlpha=0.30;
+  ctx.fillStyle='#101322';ctx.beginPath();ctx.arc(c.cx,c.cy,c.r,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#f4f4f4';
+  ctx.beginPath();ctx.moveTo(c.cx,c.cy-36);ctx.lineTo(c.cx-11,c.cy-20);ctx.lineTo(c.cx+11,c.cy-20);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(c.cx,c.cy+36);ctx.lineTo(c.cx-11,c.cy+20);ctx.lineTo(c.cx+11,c.cy+20);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(c.cx-36,c.cy);ctx.lineTo(c.cx-20,c.cy-11);ctx.lineTo(c.cx-20,c.cy+11);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(c.cx+36,c.cy);ctx.lineTo(c.cx+20,c.cy-11);ctx.lineTo(c.cx+20,c.cy+11);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#c14136';ctx.beginPath();ctx.arc(TZ.a.cx,TZ.a.cy,TZ.a.r,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#22243a';ctx.beginPath();ctx.arc(TZ.m.cx,TZ.m.cy,TZ.m.r,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=0.75;
+  ctx.fillStyle='#f4f4f4';ctx.font='14px monospace';ctx.textAlign='center';ctx.textBaseline='top';
+  ctx.fillText('A',TZ.a.cx,TZ.a.cy-7);
+  ctx.font='10px monospace';ctx.fillText('M',TZ.m.cx,TZ.m.cy-5);
+  ctx.globalAlpha=1;
+}
 
 // ---------- game state ----------
 let state='title';
@@ -1643,6 +1695,7 @@ function loop(){
     case 'beast':updateBeast();if(mg)drawBeast2();else if(dialog)drawDialog();break;
     case 'victory':drawVictory();break;
   }
+  drawTouchUI();
   pressBuf={};
   requestAnimationFrame(loop);
 }
