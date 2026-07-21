@@ -1472,6 +1472,24 @@ function drawBeast2(){
   }
 }
 
+// ---------- global play counter (anonymous — just numbers, no accounts) ----------
+let playsTotal=null,playsToday=null;
+(function countPlay(){
+  try{
+    const day=new Date().toISOString().slice(0,10).replace(/-/g,'');
+    fetch('https://api.counterapi.dev/v1/adventureisland-sgp/plays/up')
+      .then(r=>r.json()).then(d=>{playsTotal=d.count}).catch(()=>{});
+    fetch('https://api.counterapi.dev/v1/adventureisland-sgp/plays'+day+'/up')
+      .then(r=>r.json()).then(d=>{playsToday=d.count}).catch(()=>{});
+  }catch(e){}
+})();
+function drawPlayCount(){
+  if(playsTotal===null)return;
+  const s='★ '+playsTotal+' adventurers'+(playsToday!==null?' · '+playsToday+' today':'');
+  text(s,9,H-17,'rgba(0,0,0,0.6)',9);
+  text(s,8,H-18,'#ffd94a',9);
+}
+
 // ---------- title & victory ----------
 // If a title.png sits next to this file, it becomes the title screen
 const titleImg=new Image();
@@ -1510,6 +1528,7 @@ function drawTitle(){
       text('PRESS SPACE',W/2,H-40,P.white,13,'center');
     }
     if(hasSave)text('save found — continuing your adventure',W/2,H-16,'rgba(255,255,255,0.85)',8,'center');
+    drawPlayCount();
     return;
   }
   // bright tropical sky
@@ -1586,6 +1605,7 @@ function drawTitle(){
   text('ISLAND',W/2,49,'#ffd94a',30,'center');
   if(pb)text('PRESS SPACE',W/2,286,P.white,12,'center');
   if(hasSave)text('save found — continuing your adventure',W/2,308,'rgba(244,244,244,0.8)',8,'center');
+  drawPlayCount();
 }
 function updateTitle(){if(action())state='world'}
 let victT=0;
