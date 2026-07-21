@@ -301,12 +301,17 @@ const npcs=[
   {id:'v3',villager:true,name:'Kip',x:166,y:139,color:'#5aa0c5',
    lines:["I found a shiny coin under","a mushroom once!","I bet there are coins all","over the island..."]},
   {id:'v4',villager:true,name:'Sana',x:56,y:96,color:'#b05a3d',
-   lines:["The sakura petals never stop","falling here.","Pick a team at the plaza —","statues love company!"]}
+   lines:["The sakura petals never stop","falling here.","Pick a team at the plaza —","statues love company!"]},
+  // team recruiters — one guarding each pedestal, shirts in team colors
+  {id:'r1',recruit:'ember',name:'Rex', x:116,y:88,color:'#e74c3c'},
+  {id:'r2',recruit:'tide', name:'Tila',x:124,y:88,color:'#3b82d1'},
+  {id:'r3',recruit:'bloom',name:'Bud', x:116,y:94,color:'#2f9e44'},
+  {id:'r4',recruit:'bolt', name:'Zap', x:124,y:94,color:'#f1c40f'}
 ];
 
 // ---------- dialog ----------
 let dialog=null;
-function say(lines,after){dialog={lines,idx:0,after:after||null};state='dialog'}
+function say(lines,after,portrait){dialog={lines,idx:0,after:after||null,portrait:portrait||null};state='dialog'}
 
 // ---------- drawing helpers ----------
 function px(x,y,w,h,col){ctx.fillStyle=col;ctx.fillRect(x|0,y|0,w,h)}
@@ -996,7 +1001,21 @@ function updateWorld(){
     player.roll=16;player.rollDir=player.dir; // no one to talk to: ROLL!
   }
 }
+function recruitTalk(n){
+  const t=teams.find(t=>t.id===n.recruit);
+  const port={shirt:t.color};
+  if(team===t.id){say(["Proud to have you with us!","GO "+t.name+"!"],null,port);return}
+  dialog={lines:["Salutations. A new student","for "+t.name+"?"],idx:0,portrait:port,
+    opts:[
+      {label:"Join "+t.short+"!",fn:()=>{team=t.id;saveGame();
+        say(["Welcome aboard, champion!","Wear the "+t.short+" colors","with pride!"],null,port)}},
+      {label:"Nah.",fn:()=>{say(["Suit yourself, champ."],null,port)}},
+      {label:"Who?",fn:()=>{say(["We are "+t.name+"!","Six badges, one beast, and","endless glory await us.","Think it over!"],null,port)}}
+    ]};
+  state='dialog';
+}
 function talkTo(n){
+  if(n.recruit){recruitTalk(n);return}
   if(n.villager){say(n.lines);return}
   if(n.id==='delta'){
     if(crowned)say(n.done);
@@ -1039,7 +1058,7 @@ function drawWorld(){
     shadow(sx+8,sy+16,7,3);
     drawPerson(sx,sy,'down',0,n.color,n.id==='delta'?P.gold:P.black);
     if(n.id==='delta'){px(sx+5,sy-3,6,3,P.gold);px(sx+5,sy-5,1,2,P.gold);px(sx+8,sy-5,1,2,P.gold);px(sx+10,sy-5,1,2,P.gold)}
-    if(n.villager)continue;
+    if(n.villager||n.recruit)continue;
     const has=n.id==='delta'?crowned:badges[n.id];
     if(!has&&Math.abs(player.x-(n.x*TS+8))<40&&Math.abs(player.y-(n.y*TS+8))<40){
       text('!',sx+8,sy-14,P.gold,12,'center');
@@ -1082,6 +1101,7 @@ function drawHud(){
   ctx.strokeStyle=P.white;ctx.lineWidth=1;ctx.strokeRect(mx0-0.5,my0-0.5,mmw+1,mmh+1);
   const sc=mmw/(MW*TS);
   for(const n of npcs){
+    if(n.villager||n.recruit)continue;
     const has=n.id==='delta'?crowned:badges[n.id];
     px(mx0+n.x*TS*sc-1,my0+n.y*TS*sc-1,3,3,has?P.white:P.gold);
   }
@@ -1104,7 +1124,7 @@ function drawMap(){
   const spotLabels={sprint:'MUSHROOM BEACH',archery:'PAGODA WOODS',fishing:'HARBOR TOWN',
     delta:'SNOW SUMMIT',pong:'CASTLE ISLE',climb:'ICE WALL',swim:'LAGOON'};
   for(const n of npcs){
-    if(n.villager)continue;
+    if(n.villager||n.recruit)continue;
     const sx=mx+n.x/MW*mw2,sy=my+n.y/MH*mh2;
     const has=n.id==='delta'?crowned:badges[n.id];
     ctx.fillStyle=n.color;ctx.beginPath();ctx.arc(sx,sy,6,0,Math.PI*2);ctx.fill();
@@ -1149,21 +1169,54 @@ function drawMap(){
 
 // ---------- dialog ----------
 function updateDialog(){
+  const d=dialog;
+  if(d.mode==='opts'){
+    if(pressed('ArrowUp')||pressed('w')||pressed('W'))d.sel=(d.sel+d.opts.length-1)%d.opts.length;
+    if(pressed('ArrowDown')||pressed('s')||pressed('S'))d.sel=(d.sel+1)%d.opts.length;
+    if(action()){
+      const o=d.opts[d.sel];
+      dialog=null;state='world';
+      if(o.fn)o.fn();
+    }
+    return;
+  }
   if(action()){
-    dialog.idx+=2;
-    if(dialog.idx>=dialog.lines.length){
-      const after=dialog.after;dialog=null;
+    d.idx+=2;
+    if(d.idx>=d.lines.length){
+      if(d.opts){d.mode='opts';d.sel=0;return}
+      const after=d.after;dialog=null;
       state='world';
       if(after)after();
     }
   }
 }
+function drawPortrait(x,y,port){
+  px(x,y,48,48,'#2a1c10');
+  ctx.strokeStyle=P.gold;ctx.lineWidth=2;ctx.strokeRect(x+1,y+1,46,46);
+  px(x+8,y+22,32,24,port.shirt);                    // shirt/shoulders
+  px(x+12,y+8,24,20,P.skin);                        // face
+  px(x+10,y+4,28,8,'#3d2b1e');                      // hair
+  px(x+10,y+8,4,10,'#3d2b1e');px(x+34,y+8,4,10,'#3d2b1e');
+  px(x+16,y+15,4,5,P.black);px(x+28,y+15,4,5,P.black); // eyes
+  px(x+21,y+23,6,2,'#b97a5a');                      // mouth
+}
 function drawDialog(){
   drawWorld();
-  panel(20,H-84,W-40,70);
-  text(dialog.lines[dialog.idx]||'',36,H-68,P.white,12);
-  text(dialog.lines[dialog.idx+1]||'',36,H-48,P.white,12);
-  if(frame%60<40)text('▼ SPACE',W-52,H-28,P.gold,9,'center');
+  const d=dialog;
+  panel(20,H-100,W-40,86);
+  let tx=36;
+  if(d.portrait){drawPortrait(30,H-92,d.portrait);tx=90}
+  if(d.mode==='opts'){
+    for(let i=0;i<d.opts.length;i++){
+      const yy=H-90+i*24;
+      if(i===d.sel)text('▶',tx,yy,P.gold,11);
+      text(d.opts[i].label,tx+16,yy,i===d.sel?P.gold:P.white,12);
+    }
+  }else{
+    text(d.lines[d.idx]||'',tx,H-88,P.white,12);
+    text(d.lines[d.idx+1]||'',tx,H-66,P.white,12);
+    if(frame%60<40)text('▼ SPACE',W-56,H-30,P.gold,9,'center');
+  }
 }
 
 // ---------- minigames ----------
