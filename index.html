@@ -160,7 +160,8 @@ const SOLID=t=>t===0||t===8||t===3||t===6||t===11||t===12||t===14||t===16||t===2
   for(let y=88;y<=92;y++)for(let x=118;x<=122;x++)if(SOLID(T(x,y))&&T(x,y)!==8)setT(x,y,2);
   [[168,142],[180,40],[66,44],[120,36],[168,141],[180,41],[66,45],[120,37],[121,36],[119,36],
    [56,137],[56,138],[112,33],[112,34],[212,54],[212,55],[138,90],[138,91],[60,41],[60,42],
-   [166,139],[166,140],[56,96],[56,97],[55,96],[57,96]].forEach(([x,y])=>{
+   [166,139],[166,140],[56,96],[56,97],[55,96],[57,96],
+   [154,146],[154,147],[110,96],[110,97],[128,38],[128,39]].forEach(([x,y])=>{
     const t=T(x,y);if(t===3||t===6||t===11||t===12||t===14)setT(x,y,t===14?19:2);
   });
 
@@ -334,7 +335,7 @@ function musicTick(){
 let state='title';
 let frame=0;
 const player={x:120*TS+8,y:91*TS+8,dir:'down',walk:0,speed:2.0,roll:0,rollDir:'down'};
-const badges={sprint:false,archery:false,fishing:false,pong:false,climb:false,swim:false};
+const badges={sprint:false,archery:false,fishing:false,pong:false,climb:false,swim:false,surf:false,goal:false,sled:false};
 const badgeCount=()=>Object.values(badges).filter(b=>b).length;
 let crowned=false;
 let tamed=false; // the beast of Beast Isle
@@ -381,9 +382,24 @@ const npcs=[
    win:["WHAT a finish! The WAVE","BADGE belongs to you!"],
    lose:["Glub glub! Try again when","you catch your breath!"],
    done:["The lagoon sings your name."]},
+  {id:'surf',name:'Koa',x:154,y:146, color:'#1abc9c', game:'surf',
+   intro:["Koa! Best surfer on the","whole island, brah!","Ride the wave to shore.","UP / DOWN to dodge rocks","and buoys. Wipe out 3 times","and the sea wins!"],
+   win:["Cowabunga!! The SURF","BADGE is yours, brah!"],
+   lose:["Wipeout! Shake off the","salt and paddle back!"],
+   done:["The waves whisper your name."]},
+  {id:'goal',name:'Nilo',x:110,y:96, color:'#d35400', game:'goal',
+   intro:["Nilo. Nobody scores on me.","Penalty shootout: 5 shots.","The arrow sweeps the goal —","press SPACE to shoot where","it points. Score 3 to win!"],
+   win:["GOOOAL after goal! Take","the STRIKER BADGE!"],
+   lose:["Denied! My gloves are","magnets. Try again!"],
+   done:["My hero. Teach ME sometime."]},
+  {id:'sled',name:'Frost',x:128,y:38, color:'#a8d8f0', game:'sled',
+   intro:["Frost. I sled this mountain","before breakfast.","Steer LEFT / RIGHT through","the flag gates going down.","Miss 3 gates and you're","snow soup!"],
+   win:["Fastest run I've ever seen!","The SLED BADGE is yours!"],
+   lose:["Snow soup! Warm up and","try the run again."],
+   done:["The mountain hums your run."]},
   {id:'delta', name:'Champion Delta', x:120,y:36, color:P.purple, game:null,
-   locked:["I am Delta, Grand Champion","of this island.","Defeat all six champions,","then return to me.","Badges: "],
-   crown:["Six badges... every trial,","every champion... bested.","By the ancient right of this","island, I name YOU...","THE NEW GRAND CHAMPION!"],
+   locked:["I am Delta, Grand Champion","of this island.","Defeat all nine champions,","then return to me.","Badges: "],
+   crown:["Nine badges... every trial,","every champion... bested.","By the ancient right of this","island, I name YOU...","THE NEW GRAND CHAMPION!"],
    done:["The island is yours, Champion."]},
   {id:'v1',villager:true,name:'Old Tomo',x:138,y:90,color:'#8a7a5a',
    lines:["They say the beast on the","dark isle only looks scary...","Maybe someone brave could","calm it down?"]},
@@ -1199,8 +1215,8 @@ function talkTo(n){
   if(n.villager){say(n.lines);return}
   if(n.id==='delta'){
     if(crowned)say(n.done);
-    else if(badgeCount()===6)say(n.crown,()=>{crowned=true;saveGame();state='victory'});
-    else{const l=n.locked.slice();l[l.length-1]+=badgeCount()+' / 6';say(l)}
+    else if(badgeCount()===9)say(n.crown,()=>{crowned=true;saveGame();state='victory'});
+    else{const l=n.locked.slice();l[l.length-1]+=badgeCount()+' / 9';say(l)}
     return;
   }
   if(badges[n.id]){say(n.done);return}
@@ -1255,13 +1271,13 @@ function drawWorld(){
   drawHud();
 }
 function drawHud(){
-  px(6,6,158,22,'rgba(26,28,44,0.8)');
+  px(6,6,196,22,'rgba(26,28,44,0.8)');
   text('BADGES',12,12,P.white,9);
-  const ids=['sprint','archery','fishing','pong','climb','swim'];
+  const ids=['sprint','archery','fishing','pong','climb','swim','surf','goal','sled'];
   ids.forEach((id,i)=>{
-    const bx=62+i*16;
-    px(bx,10,13,13,badges[id]?P.gold:P.uiL);
-    if(badges[id]){px(bx+4,13,5,5,P.white);px(bx+6,11,2,2,P.white)}
+    const bx=60+i*15;
+    px(bx,10,12,13,badges[id]?P.gold:P.uiL);
+    if(badges[id]){px(bx+3,13,5,5,P.white);px(bx+5,11,2,2,P.white)}
   });
   let hy=32;
   if(team){
@@ -1303,7 +1319,8 @@ function drawMap(){
   ctx.drawImage(mini,mx,my,mw2,mh2);
   ctx.strokeStyle=P.white;ctx.lineWidth=2;ctx.strokeRect(mx-1,my-1,mw2+2,mh2+2);
   const spotLabels={sprint:'MUSHROOM BEACH',archery:'PAGODA WOODS',fishing:'HARBOR TOWN',
-    delta:'SNOW SUMMIT',pong:'CASTLE ISLE',climb:'ICE WALL',swim:'LAGOON'};
+    delta:'SNOW SUMMIT',pong:'CASTLE ISLE',climb:'ICE WALL',swim:'LAGOON',
+    surf:'SURF COVE',goal:'FIELD',sled:'SLED RUN'};
   for(const n of npcs){
     if(n.villager||n.recruit)continue;
     const sx=mx+n.x/MW*mw2,sy=my+n.y/MH*mh2;
@@ -1334,17 +1351,18 @@ function drawMap(){
   text('S',cx2,cy2+34,P.white,9,'center');
   text('W',cx2-40,cy2-5,P.white,9,'center');
   text('E',cx2+34,cy2-5,P.white,9,'center');
-  panel(W-136,138,100,138);
-  text('BADGES',W-86,146,P.gold,10,'center');
+  panel(W-136,128,100,170);
+  text('BADGES',W-86,134,P.gold,10,'center');
   const ids2=[['sprint','Sprint'],['archery','Archery'],['fishing','Fishing'],
-    ['pong','Paddle'],['climb','Summit'],['swim','Wave']];
+    ['pong','Paddle'],['climb','Summit'],['swim','Wave'],
+    ['surf','Surf'],['goal','Striker'],['sled','Sled']];
   ids2.forEach(([id,lbl],i)=>{
-    const yy=160+i*15;
-    px(W-126,yy,11,11,badges[id]?P.gold:P.uiL);
-    if(badges[id])text('✓',W-121,yy+1,P.ui,8,'center');
-    text(lbl,W-110,yy+2,P.white,8);
+    const yy=148+i*14;
+    px(W-126,yy,10,10,badges[id]?P.gold:P.uiL);
+    if(badges[id])text('✓',W-121,yy,P.ui,8,'center');
+    text(lbl,W-111,yy+1,P.white,8);
   });
-  text(crowned?'GRAND CHAMPION':badgeCount()+' / 6 · '+coinCount+' coins'+(tamed?' · 🐾':''),W-86,H-110,P.white,7,'center');
+  text(crowned?'GRAND CHAMPION':badgeCount()+'/9 · '+coinCount+' coins'+(tamed?' · 🐾':''),W-86,H-80,P.white,7,'center');
   text('M or SPACE to close',W/2,H-30,'rgba(244,244,244,0.8)',10,'center');
 }
 
@@ -1409,6 +1427,9 @@ function startGame(n){
   else if(n.game==='pong')mg={type:'pong',py:185,ay:185,bx:W/2,by:185,vx:3.4,vy:2.0,ps:0,as:0,t:0,over:false,won:false,champ:n};
   else if(n.game==='climb')mg={type:'climb',h:0,lane:1,rocks:[],t:0,hits:0,hurt:0,over:false,won:false,champ:n};
   else if(n.game==='swim')mg={type:'swim',you:0,rival:0,mark:0,md:1,t:0,fb:0,over:false,won:false,champ:n};
+  else if(n.game==='surf')mg={type:'surf',lane:1,dist:0,obs:[],t:0,hits:0,hurt:0,over:false,won:false,champ:n};
+  else if(n.game==='goal')mg={type:'goal',aim:-1,av:0.045,shots:0,goals:0,anim:0,scored:false,kz:1,bz:1,over:false,won:false,champ:n};
+  else if(n.game==='sled')mg={type:'sled',x:50,t:0,gates:[],spawned:0,passed:0,missed:0,over:false,won:false,champ:n};
   state=n.game;
 }
 function endGame(won){
@@ -1429,9 +1450,9 @@ function updateRace(){
   if(m.t===30||m.t===60)sfx.beep();
   if(m.t===90)sfx.go();
   if(m.t>90){
-    m.rival+=0.62;
-    if(pressed('ArrowLeft')||pressed('a')||pressed('A')){if(m.last!=='L'){m.you+=2.6;m.last='L';sfx.step(1)}}
-    if(pressed('ArrowRight')||pressed('d')||pressed('D')){if(m.last!=='R'){m.you+=2.6;m.last='R';sfx.step(1)}}
+    m.rival+=0.48;
+    if(pressed('ArrowLeft')||pressed('a')||pressed('A')){if(m.last!=='L'){m.you+=3.1;m.last='L';sfx.step(1)}}
+    if(pressed('ArrowRight')||pressed('d')||pressed('D')){if(m.last!=='R'){m.you+=3.1;m.last='R';sfx.step(1)}}
     if(m.you>=100||m.rival>=100){m.over=true;m.won=m.you>=100&&m.you>=m.rival}
   }
 }
@@ -1647,16 +1668,16 @@ function updateSwim(){
   if(m.over){if(action())endGame(m.won);return}
   m.t++;if(m.fb>0)m.fb--;
   if(m.t>60){
-    m.mark+=m.md*3.4;
+    m.mark+=m.md*2.9;
     if(m.mark>100){m.mark=100;m.md=-1}
     if(m.mark<0){m.mark=0;m.md=1}
-    m.rival+=0.52;
+    m.rival+=0.40;
     if(pressed(' ')){
       const d=Math.abs(m.mark-50);
       sfx.splash();
-      if(d<12){m.you+=6;m.fb=1;sfx.hit()}
-      else if(d<26){m.you+=3;m.fb=2}
-      else {m.you+=0.5;m.fb=3}
+      if(d<17){m.you+=6;m.fb=1;sfx.hit()}
+      else if(d<32){m.you+=3.5;m.fb=2}
+      else {m.you+=1;m.fb=3}
       m.fbT=20;
     }
     if(m.fbT>0)m.fbT--;
@@ -1690,6 +1711,167 @@ function drawSwim(){
   if(mg.over){
     panel(W/2-100,H/2-40,200,80);
     text(mg.won?'YOU WIN THE RACE!':'MARINA WINS!',W/2,H/2-24,mg.won?P.gold:P.red,13,'center');
+    text('SPACE to continue',W/2,H/2+10,P.white,10,'center');
+  }
+}
+
+// --- surf run ---
+function updateSurf(){
+  const m=mg;
+  if(m.over){if(action())endGame(m.won);return}
+  m.t++;if(m.hurt>0)m.hurt--;
+  m.dist+=0.45;
+  if(pressed('ArrowUp')||pressed('w')||pressed('W'))m.lane=Math.max(0,m.lane-1);
+  if(pressed('ArrowDown')||pressed('s')||pressed('S'))m.lane=Math.min(2,m.lane+1);
+  if(m.t%48===0)m.obs.push({lane:(Math.random()*3)|0,x:W+20,rock:Math.random()<0.5});
+  for(let i=m.obs.length-1;i>=0;i--){
+    const o=m.obs[i];o.x-=3.3;
+    if(o.x<96&&o.x>62&&o.lane===m.lane&&m.hurt===0){
+      m.hits++;m.hurt=40;m.obs.splice(i,1);sfx.thud();
+      if(m.hits>=3){m.over=true;m.won=false}
+      continue;
+    }
+    if(o.x<-24)m.obs.splice(i,1);
+  }
+  if(m.dist>=100){m.over=true;m.won=true}
+}
+function drawSurf(){
+  px(0,0,W,H,'#2ec4c4');
+  px(0,0,W,70,'#87ceeb');px(0,66,W,6,'#8fe0d8');
+  const ly=[130,195,260];
+  for(const y of ly){px(0,y+22,W,3,'rgba(255,255,255,0.35)')}
+  for(let i=0;i<16;i++){const wy=90+(i*23)%240;px(W-((i*67+frame*3)%(W+40)),wy,22,2,'rgba(255,255,255,0.4)')}
+  // big chasing wave on the left
+  px(0,80,34,H-80,'#7fe3dc');px(30,84,8,H-84,'rgba(255,255,255,0.6)');
+  for(const o of mg.obs){
+    const y=ly[o.lane];
+    if(o.rock){px(o.x-8,y-4,18,14,P.rock);px(o.x-4,y-8,10,6,P.rock);px(o.x-6,y+6,14,4,P.rockD)}
+    else{px(o.x-6,y-8,12,14,P.red);px(o.x-6,y-4,12,4,P.white);px(o.x-2,y-12,4,4,P.red)}
+  }
+  if(!(mg.hurt>0&&frame%6<3)){
+    const y=ly[mg.lane];
+    px(66,y+8,26,5,'#e8c93e');px(64,y+9,4,3,'#d9ac0e'); // surfboard
+    drawHero(70,y-10,'right',(mg.t/7)|0);
+    if(frame%6<3)px(58,y+10,6,2,'rgba(255,255,255,0.8)'); // spray
+  }
+  panel(W/2-100,8,200,44);
+  text('WAVE RIDER',W/2,16,P.gold,12,'center');
+  text('Lives: '+'♥'.repeat(3-mg.hits)+'   Shore: '+(mg.dist|0)+'%',W/2,32,P.white,10,'center');
+  panel(W-52,60,26,240);
+  const dh=mg.dist/100*228;
+  px(W-46,294-dh,14,dh,'#1abc9c');
+  text('SHORE',W-39,46,P.white,8,'center');
+  if(mg.over){
+    panel(W/2-100,H/2-40,200,80);
+    text(mg.won?'YOU RODE IT HOME!':'WIPEOUT...',W/2,H/2-24,mg.won?P.gold:P.red,13,'center');
+    text('SPACE to continue',W/2,H/2+10,P.white,10,'center');
+  }
+}
+
+// --- penalty shootout ---
+function updateGoal(){
+  const m=mg;
+  if(m.over){if(action())endGame(m.won);return}
+  if(m.anim>0){
+    m.anim--;
+    if(m.anim===0){
+      if(m.goals>=3){m.over=true;m.won=true}
+      else if(m.shots-m.goals>=3){m.over=true;m.won=false}
+      else if(m.shots>=5){m.over=true;m.won=m.goals>=3}
+    }
+    return;
+  }
+  m.aim+=m.av;
+  if(m.aim>1){m.aim=1;m.av=-Math.abs(m.av)}
+  if(m.aim<-1){m.aim=-1;m.av=Math.abs(m.av)}
+  if(pressed(' ')){
+    m.bz=m.aim<-0.33?0:m.aim>0.33?2:1;
+    m.kz=(Math.random()*3)|0;
+    m.scored=m.bz!==m.kz;
+    m.shots++;
+    if(m.scored){m.goals++;sfx.hit()}else sfx.miss();
+    sfx.shoot();
+    m.anim=55;
+  }
+}
+function drawGoal(){
+  px(0,0,W,H,'#2a7f3f');
+  for(let i=0;i<8;i++)px(0,i*46,W,23,'rgba(255,255,255,0.04)');
+  // goal frame
+  px(116,56,8,96,P.white);px(356,56,8,96,P.white);px(116,56,248,8,P.white);
+  for(let i=0;i<12;i++){px(124+i*20,64,1,88,'rgba(255,255,255,0.35)')}
+  for(let i=0;i<5;i++){px(124,64+i*18,232,1,'rgba(255,255,255,0.35)')}
+  px(100,150,280,6,P.white); // goal line
+  const kx=[160,240,320];
+  const keeperX=mg.anim>0?kx[mg.kz]:240+Math.sin(frame/30)*24;
+  drawPerson(keeperX-8,108,'down',0,'#222831',P.black);
+  // ball
+  if(mg.anim>30){const t=(55-mg.anim)/25;const bx=240+(kx[mg.bz]-240)*t;const by=300-190*t;
+    px(bx-5,by-5,10,10,P.white);px(bx-3,by-3,3,3,'#cfcfcf');}
+  else if(mg.anim>0){
+    const bx=kx[mg.bz];
+    px(bx-5,105,10,10,P.white);
+    text(mg.scored?'GOAL!':'SAVED!',W/2,180,mg.scored?P.gold:P.red,16,'center');
+  }
+  else{px(235,295,10,10,P.white);px(237,297,3,3,'#cfcfcf');
+    const ax=240+mg.aim*110;
+    text('▲',ax,160,P.gold,14,'center');
+    px(ax-1,176,2,110,'rgba(241,196,15,0.35)');
+  }
+  drawHero(W/2-8,H-42,'up',0);
+  panel(W/2-110,8,220,44);
+  text('PENALTY SHOOTOUT',W/2,16,P.gold,12,'center');
+  let pips='';
+  for(let i=0;i<5;i++)pips+=i<mg.goals?'●':i<mg.shots?'○':'·';
+  text(pips+'   score 3 of 5',W/2,32,P.white,10,'center');
+  if(mg.over){
+    panel(W/2-100,H/2-40,200,80);
+    text(mg.won?'CHAMPION STRIKER!':'NILO SAVES THE DAY!',W/2,H/2-24,mg.won?P.gold:P.red,12,'center');
+    text('SPACE to continue',W/2,H/2+10,P.white,10,'center');
+  }
+}
+
+// --- sled slalom ---
+function updateSled(){
+  const m=mg;
+  if(m.over){if(action())endGame(m.won);return}
+  m.t++;
+  if(dirDown.lf())m.x=Math.max(8,m.x-2.2);
+  if(dirDown.rt())m.x=Math.min(92,m.x+2.2);
+  if(m.spawned<10&&m.t%68===0){m.gates.push({y:H+16,cx:16+Math.random()*68,done:false});m.spawned++}
+  for(let i=m.gates.length-1;i>=0;i--){
+    const g=m.gates[i];g.y-=3.1;
+    if(!g.done&&g.y<=150){
+      g.done=true;
+      if(Math.abs(m.x-g.cx)<14){m.passed++;sfx.hit()}
+      else{m.missed++;sfx.miss();if(m.missed>=3){m.over=true;m.won=false}}
+    }
+    if(g.y<-20)m.gates.splice(i,1);
+  }
+  if(!m.over&&m.passed+m.missed>=10){m.over=true;m.won=m.missed<3}
+}
+const sledX=x=>60+x*(W-120)/100;
+function drawSled(){
+  px(0,0,W,H,'#eef2f5');
+  for(let i=0;i<40;i++){const sy=(i*37+frame*3)%H;px((i*61)%W,sy,2,1,'#c9d6e2')}
+  px(0,0,56,H,'#b9c9d9');px(W-56,0,56,H,'#b9c9d9');
+  for(let i=0;i<6;i++){const ty=(i*70+frame*3)%(H+40)-20;px(20,ty,12,16,P.treeD);px(W-36,(ty+35)%(H+40)-20,12,16,P.treeD)}
+  for(const g of mg.gates){
+    const lx=sledX(g.cx-13),rx=sledX(g.cx+13);
+    px(lx-1,g.y-14,2,16,P.trunk);px(rx-1,g.y-14,2,16,P.trunk);
+    px(lx+1,g.y-14,8,6,P.red);px(rx+1,g.y-14,8,6,P.blue);
+    if(g.done&&Math.abs(sledX(mg.x)-((lx+rx)/2))<40)px(lx,g.y+2,rx-lx,2,'rgba(47,158,68,0.5)');
+  }
+  const px2=sledX(mg.x);
+  px(px2-9,148,18,5,'#8a5a30');px(px2-11,150,4,3,'#6b4423');px(px2+7,150,4,3,'#6b4423');
+  drawHero(px2-8,128,'down',0);
+  px(px2-2,155,2,26,'rgba(150,170,190,0.5)');px(px2+1,155,1,20,'rgba(150,170,190,0.4)');
+  panel(W/2-100,8,200,44);
+  text('SUMMIT SLALOM',W/2,16,P.gold,12,'center');
+  text('Gates: '+mg.passed+' / 10   Miss: '+'✗'.repeat(mg.missed),W/2,32,P.white,10,'center');
+  if(mg.over){
+    panel(W/2-100,H/2-40,200,80);
+    text(mg.won?'PERFECT RUN!':'SNOW SOUP...',W/2,H/2-24,mg.won?P.gold:P.red,14,'center');
     text('SPACE to continue',W/2,H/2+10,P.white,10,'center');
   }
 }
@@ -1912,7 +2094,7 @@ function drawVictory(){
   panel(W/2-150,50,300,60);
   text('GRAND CHAMPION!',W/2,62,P.gold,20,'center');
   text('You conquered Adventure Island!',W/2,90,P.white,11,'center');
-  text('All six badges earned!',W/2,H-80,P.gold,12,'center');
+  text('All nine badges earned!',W/2,H-80,P.gold,12,'center');
   if(victT>120&&frame%70<45)text('SPACE to keep exploring',W/2,H-40,P.white,10,'center');
   if(victT>120&&action())state='world';
 }
@@ -1937,6 +2119,9 @@ function loop(){
     case 'pong':updatePong();if(mg)drawPong();else if(dialog)drawDialog();break;
     case 'climb':updateClimb();if(mg)drawClimb();else if(dialog)drawDialog();break;
     case 'swim':updateSwim();if(mg)drawSwim();else if(dialog)drawDialog();break;
+    case 'surf':updateSurf();if(mg)drawSurf();else if(dialog)drawDialog();break;
+    case 'goal':updateGoal();if(mg)drawGoal();else if(dialog)drawDialog();break;
+    case 'sled':updateSled();if(mg)drawSled();else if(dialog)drawDialog();break;
     case 'beast':updateBeast();if(mg)drawBeast2();else if(dialog)drawDialog();break;
     case 'victory':drawVictory();break;
   }
