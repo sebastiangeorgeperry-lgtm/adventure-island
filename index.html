@@ -834,6 +834,10 @@ function weather(){
   else if(t>per-600)inten=(per-t)/600; // clears out
   return {type:WSEQ[idx%WSEQ.length],inten};
 }
+function rainAmount(){
+  const w=weather();
+  return (w.type==='rain'||w.type==='storm')?w.inten:0;
+}
 const drops=[];
 for(let i=0;i<64;i++)drops.push({x:Math.random()*(W+80)-40,y:Math.random()*H,v:9+Math.random()*4});
 function drawRain(r,heavy){
