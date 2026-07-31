@@ -170,14 +170,23 @@ const SOLID=t=>t===0||t===8||t===3||t===6||t===11||t===12||t===14||t===16||t===2
   for(let y=89;y<=91;y++)for(let x=118;x<=122;x++)setT(x,y,2); // mossy center patch
   [[116,87],[124,87],[116,93],[124,93]].forEach(([x,y])=>setT(x,y,20)); // statue pedestals
 
-  // ---- CITY ISLAND (south): a real downtown ----
-  blob(104,158,26,14,{tree:0.02,flower:0.03});
-  rect(84,155,124,158,10);      // main street
-  rect(90,164,117,166,10);      // south street
+  // ---- CITY ISLAND (south): the big city ----
+  blob(108,157,28,15,{tree:0.02,flower:0.03});
+  // urban landfill: one big city slab
+  for(let y=141;y<=171;y++)for(let x=82;x<=134;x++){const t=T(x,y);if(t===0||t===8)setT(x,y,2)}
+  // sand rim on the slab's coast
+  for(let x=82;x<=134;x++){if(T(x,140)===0||T(x,140)===8)setT(x,141,1);if(T(x,172)===0||T(x,172)===8)setT(x,171,1)}
+  // street grid
+  rect(84,155,132,158,10);      // main street
+  rect(84,147,132,149,10);      // north street
+  rect(84,164,132,166,10);      // south street
+  rect(84,147,85,166,10);       // far west avenue
   rect(90,150,91,163,10);       // west avenue
-  rect(116,150,117,163,10);     // east avenue
   rect(100,159,101,163,10);     // alley
   rect(108,159,109,163,10);     // alley
+  rect(116,150,117,163,10);     // east avenue
+  rect(124,142,125,166,10);     // far east avenue
+  rect(96,142,97,146,10);rect(112,142,113,146,10); // north lanes
   const bld=(x1,y1,x2,y2,dx,dy)=>{rect(x1,y1,x2,y2,16);setT(dx,dy,22)};
   bld(92,150,97,154,94,154);    // library
   bld(100,150,105,154,102,154); // grocery
@@ -185,11 +194,16 @@ const SOLID=t=>t===0||t===8||t===3||t===6||t===11||t===12||t===14||t===16||t===2
   bld(94,159,99,163,96,159);    // arcade
   bld(102,159,107,163,104,159); // ramen bar
   bld(110,159,115,163,112,159); // cozy house
-  // filler blocks: shops & houses that make it feel like a downtown
-  rect(118,150,123,154,16);     // corner shop
-  rect(92,167,96,169,16);rect(99,167,103,169,16);   // house row south
-  rect(106,167,110,169,16);rect(113,167,117,169,16);
-  route(114,96,114,154);        // clear path from Team Plaza down over the bridge to the city
+  // north row: big blocks
+  rect(86,142,95,146,16);rect(98,142,111,146,16);rect(114,142,123,146,16);rect(126,142,132,146,16);
+  // side blocks
+  rect(86,150,89,154,16);rect(118,150,123,154,16);rect(126,150,131,154,16);
+  rect(86,159,89,163,16);rect(118,159,123,163,16);rect(126,159,131,163,16);
+  // south house rows
+  rect(86,167,90,169,16);rect(93,167,97,169,16);rect(100,167,104,169,16);
+  rect(107,167,111,169,16);rect(114,167,118,169,16);rect(121,167,125,169,16);rect(128,167,132,169,16);
+  route(114,96,114,154);        // bridge from Team Plaza into main street
+  route(68,140,68,148);route(68,148,84,148); // west bridge: Castle Isle straight into the north street
 })();
 
 // ---------- input ----------
@@ -374,67 +388,85 @@ const teamCol=()=>{const t=teams.find(t=>t.id===team);return t?t.color:null};
 // ---------- NPCs ----------
 const npcs=[
   {id:'sprint', name:'Kaia',  x:168,y:142, color:P.red,    game:'race',
+   style:{skin:'#d9a066',hs:'pony',hair:'#3d2b1e',hairD:'#2a1c10',top:'#d13b3b',stripe:'#f4f4f4',pants:'#f4f4f4',headband:'#f4f4f4'},
    intro:["Kaia the Sprint Champion!","Nobody outruns me on this beach.","Race me! Tap LEFT and RIGHT","alternately to sprint 100m!"],
    win:["WHAT?! You're fast!","Take the SPRINT BADGE!"],
    lose:["Heh, told you. Try again","whenever you catch your breath!"],
    done:["You're the real deal, runner."]},
   {id:'archery',name:'Fen',   x:180,y:40, color:P.green,  game:'archery',
+   style:{skin:'#e8b88a',hs:'hood',hair:'#1f5c14',hairD:'#143d0d',top:'#2f9e44',jacket:'#1f5c14',sash:'#8a5a30',pants:'#4a3a2a'},
    intro:["Fen, Champion of the Bow.","The forest teaches patience.","Hit the moving target. 3 arrows.","Score 25+ and the badge is yours.","Press SPACE to loose an arrow."],
    win:["A true eye! The ARCHERY","BADGE belongs to you."],
    lose:["Breathe. Aim. Release.","Return when you are ready."],
    done:["The forest respects you now."]},
   {id:'fishing',name:'Moro',  x:66,y:44, color:P.blue,   game:'fishing',
+   style:{skin:'#e8b88a',hs:'bucket',hair:'#3b6bd1',hairD:'#2a4a9f',top:'#8fb8d0',jacket:'#2a4a6f',beard:'#b0b8c5',pants:'#4a5a34'},
    intro:["Moro's the name, fishing's","the game.","Hold SPACE to raise your hook,","release to drop it.","Keep it on the fish to reel","it in before the line breaks!"],
    win:["Ha! A natural! The FISHING","BADGE is yours, friend."],
    lose:["Slippery one, eh?","Come back and try again!"],
    done:["Best angler I've ever seen."]},
   {id:'pong',name:'Pip',x:56,y:137, color:P.orange, game:'pong',
+   style:{skin:'#f5d5a8',hs:'cap',hair:'#e67e22',hairD:'#b35f10',top:'#f4f4f4',stripe:'#e67e22',pants:'#2a4a6f',freckles:true},
    intro:["Pip! Castle table tennis","champ, undefeated!","First to 5 points wins.","UP and DOWN move your paddle.","Don't blink!"],
    win:["Un-be-lievable! My streak!","The PADDLE BADGE is yours!"],
    lose:["Ha! Too slow!","Practice and come back!"],
    done:["Rally with me anytime, champ."]},
   {id:'climb',name:'Yuki',x:112,y:33, color:'#7fc7e8', game:'climb',
+   style:{skin:'#f5e0c8',hs:'parka',hair:'#7fc7e8',hairD:'#5aa0c5',top:'#7fc7e8',jacket:'#5aa0c5',belt:'#2a4a6f',pants:'#2a4a6f',blush:true},
    intro:["Yuki. I climb the ice wall","every dawn.","Climb to the top — but watch","for falling ice!","LEFT / RIGHT to change lanes.","Three hits and you fall."],
    win:["You touched the sky!","Take the SUMMIT BADGE!"],
    lose:["The mountain says not today.","Warm up and return."],
    done:["The peak remembers you."]},
   {id:'swim',name:'Marina',x:212,y:54, color:'#3bd1c4', game:'swim',
+   style:{skin:'#d9a066',hs:'swimcap',hair:'#3bd1c4',hairD:'#f4f4f4',top:'#3bd1c4',stripe:'#f4f4f4',goggles:true,pants:'#2a8a80'},
    intro:["Marina, fastest fins in","the lagoon!","Race me across! Press SPACE","when the marker hits the","green zone to stroke.","Perfect timing = big speed!"],
    win:["WHAT a finish! The WAVE","BADGE belongs to you!"],
    lose:["Glub glub! Try again when","you catch your breath!"],
    done:["The lagoon sings your name."]},
   {id:'surf',name:'Koa',x:154,y:146, color:'#1abc9c', game:'surf',
+   style:{skin:'#c98f5e',hs:'spiky',hair:'#e8c93e',hairD:'#d4a04a',top:'#1abc9c',pants:'#e8734a',flower:true,blush:true},
    intro:["Koa! Best surfer on the","whole island, brah!","Ride the wave to shore.","UP / DOWN to dodge rocks","and buoys. Wipe out 3 times","and the sea wins!"],
    win:["Cowabunga!! The SURF","BADGE is yours, brah!"],
    lose:["Wipeout! Shake off the","salt and paddle back!"],
    done:["The waves whisper your name."]},
   {id:'goal',name:'Nilo',x:110,y:96, color:'#d35400', game:'goal',
+   style:{skin:'#8a5a3a',hs:'curly',hair:'#1a1c2c',hairD:'#2e2e3a',top:'#d35400',stripe:'#1a1c2c',gloves:'#f4f4f4',pants:'#1a1c2c'},
    intro:["Nilo. Nobody scores on me.","Penalty shootout: 5 shots.","The arrow sweeps the goal —","press SPACE to shoot where","it points. Score 3 to win!"],
    win:["GOOOAL after goal! Take","the STRIKER BADGE!"],
    lose:["Denied! My gloves are","magnets. Try again!"],
    done:["My hero. Teach ME sometime."]},
   {id:'sled',name:'Frost',x:128,y:38, color:'#a8d8f0', game:'sled',
+   style:{skin:'#f5e0c8',hs:'beanie',hair:'#a8d8f0',hairD:'#7fb8d8',top:'#5a7298',jacket:'#3d5a80',scarf:'#f4f4f4',pants:'#3d4a66'},
    intro:["Frost. I sled this mountain","before breakfast.","Steer LEFT / RIGHT through","the flag gates going down.","Miss 3 gates and you're","snow soup!"],
    win:["Fastest run I've ever seen!","The SLED BADGE is yours!"],
    lose:["Snow soup! Warm up and","try the run again."],
    done:["The mountain hums your run."]},
   {id:'delta', name:'Champion Delta', x:120,y:36, color:P.purple, game:null,
+   style:{skin:'#e8c8a8',hs:'long',hair:'#e8e4f0',hairD:'#c5c0d8',top:'#8e44ad',jacket:'#6a2a8a',belt:'#f1c40f',buckle:'#fff3b0',crown:true,pants:'#4a2a5a'},
    locked:["I am Delta, Grand Champion","of this island.","Defeat all nine champions,","then return to me.","Badges: "],
    crown:["Nine badges... every trial,","every champion... bested.","By the ancient right of this","island, I name YOU...","THE NEW GRAND CHAMPION!"],
    done:["The island is yours, Champion."]},
   {id:'v1',villager:true,name:'Old Tomo',x:138,y:90,color:'#8a7a5a',
+   style:{skin:'#e8c8a8',hs:'bald',hair:'#b0b8c5',top:'#8a7a5a',jacket:'#6a5a40',beard:'#d5dae2',pants:'#5a4a34'},
    lines:["They say the beast on the","dark isle only looks scary...","Maybe someone brave could","calm it down?"]},
   {id:'v2',villager:true,name:'Hana',x:60,y:41,color:'#c58ab0',
+   style:{skin:'#f5d5a8',hs:'bun',hair:'#c58ab0',hairD:'#a86a95',top:'#e8e0c8',apron:'#c58ab0',blush:true,earring:true,pants:'#8a5a6a'},
    lines:["Fresh fish! Straight off the","boats!","Did you know you can walk","onto every boat in the bay?"]},
   {id:'v3',villager:true,name:'Kip',x:166,y:139,color:'#5aa0c5',
+   style:{skin:'#c98f5e',hs:'cap',hair:'#5aa0c5',hairD:'#3d7a9a',top:'#f5e04b',stripe:'#5aa0c5',freckles:true,pants:'#6a5a40'},
    lines:["I found a shiny coin under","a mushroom once!","I bet there are coins all","over the island..."]},
   {id:'v4',villager:true,name:'Sana',x:56,y:96,color:'#b05a3d',
+   style:{skin:'#e8b88a',hs:'long',hair:'#b05a3d',hairD:'#8a4028',top:'#e8a0b8',flower:true,pants:'#8a5a6a'},
    lines:["The sakura petals never stop","falling here.","Pick a team at the plaza —","statues love company!"]},
-  // team recruiters — one guarding each pedestal, shirts in team colors
-  {id:'r1',recruit:'ember',name:'Rex', x:116,y:88,color:'#e74c3c'},
-  {id:'r2',recruit:'tide', name:'Tila',x:124,y:88,color:'#3b82d1'},
-  {id:'r3',recruit:'bloom',name:'Bud', x:116,y:94,color:'#2f9e44'},
-  {id:'r4',recruit:'bolt', name:'Zap', x:124,y:94,color:'#f1c40f'}
+  // team recruiters — one guarding each pedestal, dressed in team colors
+  {id:'r1',recruit:'ember',name:'Rex', x:116,y:88,color:'#e74c3c',
+   style:{skin:'#c98f5e',hs:'spiky',hair:'#8a2a1e',hairD:'#5f1c12',top:'#e74c3c',jacket:'#a83226',headband:'#f5e04b',pants:'#3a3a45'}},
+  {id:'r2',recruit:'tide', name:'Tila',x:124,y:88,color:'#3b82d1',
+   style:{skin:'#f5d5a8',hs:'pony',hair:'#2a4a9f',hairD:'#1e3550',top:'#3b82d1',stripe:'#f4f4f4',earring:true,pants:'#f4f4f4'}},
+  {id:'r3',recruit:'bloom',name:'Bud', x:116,y:94,color:'#2f9e44',
+   style:{skin:'#8a5a3a',hs:'curly',hair:'#1f5c14',hairD:'#143d0d',top:'#2f9e44',straps:'#1f5c14',flower:true,pants:'#4a3a2a'}},
+  {id:'r4',recruit:'bolt', name:'Zap', x:124,y:94,color:'#f1c40f',
+   style:{skin:'#e8b88a',hs:'spiky',hair:'#f1c40f',hairD:'#d9ac0e',top:'#f1c40f',stripe:'#1a1c2c',glasses:true,pants:'#1a1c2c'}}
 ];
 
 // ---------- dialog ----------
@@ -534,19 +566,70 @@ function drawTile(t,sx,sy,x,y){
   }
 }
 
-// ---------- sprites ----------
-function drawPerson(sx,sy,dir,walkFrame,shirt,hat){
-  const bob=walkFrame%2===1?1:0;
+// ---------- sprites: every islander is one of a kind ----------
+function drawPersonEx(sx,sy,dir,walkFrame,st){
+  st=st||{};
+  const step=walkFrame%2===1,bob=step?1:0;
   sy+=bob;
-  if(walkFrame%2===1){px(sx+4,sy+12,3,4-bob,P.black);px(sx+9,sy+13,3,3-bob,P.black)}
-  else{px(sx+4,sy+12,3,4,P.black);px(sx+9,sy+12,3,4,P.black)}
-  px(sx+3,sy+7,10,5,shirt);
-  px(sx+2,sy+8,2,3,shirt);px(sx+12,sy+8,2,3,shirt);
-  px(sx+4,sy+1,8,6,P.skin);
-  px(sx+3,sy,10,2,hat);px(sx+3,sy+1,2,3,hat);px(sx+11,sy+1,2,3,hat);
-  if(dir==='down'){px(sx+6,sy+3,1,2,P.black);px(sx+9,sy+3,1,2,P.black)}
-  else if(dir==='left'){px(sx+5,sy+3,1,2,P.black)}
-  else if(dir==='right'){px(sx+10,sy+3,1,2,P.black)}
+  const skin=st.skin||'#f0c8a0';
+  const pants=st.pants||'#3a3a45',shoes=st.shoes||'#22232e';
+  // legs & shoes (walk cycle)
+  if(step){px(sx+4,sy+12,3,3-bob,pants);px(sx+9,sy+13,3,2-bob,pants)}
+  else{px(sx+4,sy+12,3,3,pants);px(sx+9,sy+12,3,3,pants)}
+  px(sx+4,sy+15,3,1,shoes);px(sx+9,sy+15,3,1,shoes);
+  // torso
+  const top=st.top||'#8a7a5a';
+  px(sx+3,sy+7,10,5,top);
+  if(st.stripe)px(sx+3,sy+9,10,1,st.stripe);
+  if(st.jacket){px(sx+3,sy+7,2,5,st.jacket);px(sx+11,sy+7,2,5,st.jacket);px(sx+3,sy+7,10,1,st.jacket)}
+  if(st.apron){px(sx+5,sy+8,6,4,st.apron);px(sx+6,sy+7,4,1,st.apron)}
+  if(st.straps){px(sx+5,sy+7,2,2,st.straps);px(sx+9,sy+7,2,2,st.straps)}
+  if(st.sash){px(sx+3,sy+7,2,1,st.sash);px(sx+5,sy+8,2,1,st.sash);px(sx+7,sy+9,2,1,st.sash);px(sx+9,sy+10,2,1,st.sash)}
+  if(st.belt){px(sx+4,sy+11,8,1,st.belt);if(st.buckle)px(sx+7,sy+11,2,1,st.buckle)}
+  // arms & hands
+  const sleeve=st.sleeve||st.jacket||top;
+  px(sx+2,sy+8,2,3,sleeve);px(sx+12,sy+8,2,3,sleeve);
+  px(sx+2,sy+11,2,1,st.gloves||skin);px(sx+12,sy+11,2,1,st.gloves||skin);
+  // head
+  px(sx+4,sy+1,8,6,skin);
+  // hair & headwear
+  const h=st.hair||'#3d2b1e',hd=st.hairD||h;
+  switch(st.hs||'flat'){
+    case 'flat':px(sx+3,sy,10,2,h);px(sx+3,sy+1,2,3,h);px(sx+11,sy+1,2,3,hd);break;
+    case 'spiky':px(sx+3,sy,10,2,h);px(sx+2,sy-2,3,3,h);px(sx+6,sy-2,3,2,hd);px(sx+10,sy-2,3,3,h);px(sx+3,sy+1,2,3,h);px(sx+11,sy+1,2,3,hd);break;
+    case 'bowl':px(sx+3,sy-1,10,4,h);px(sx+2,sy,2,4,h);px(sx+12,sy,2,4,hd);break;
+    case 'pony':px(sx+3,sy,10,2,h);px(sx+3,sy+1,2,3,h);px(sx+11,sy+1,2,2,h);px(sx+12,sy+2,3,6,hd);px(sx+13,sy+8,2,3,h);break;
+    case 'bun':px(sx+3,sy,10,2,h);px(sx+6,sy-3,4,3,hd);px(sx+3,sy+1,2,2,h);px(sx+11,sy+1,2,2,h);break;
+    case 'long':px(sx+3,sy,10,2,h);px(sx+2,sy+1,2,8,h);px(sx+12,sy+1,2,8,hd);break;
+    case 'curly':px(sx+3,sy-1,10,3,h);px(sx+2,sy-2,3,3,hd);px(sx+7,sy-2,3,2,h);px(sx+11,sy-2,3,3,hd);px(sx+2,sy+1,2,3,h);px(sx+12,sy+1,2,3,h);break;
+    case 'cap':px(sx+3,sy-1,10,3,h);px(sx+3,sy+2,11,1,hd);px(sx+6,sy-2,4,1,h);break;
+    case 'bucket':px(sx+2,sy,12,2,h);px(sx+4,sy-3,8,4,h);px(sx+4,sy-1,8,1,hd);break;
+    case 'beanie':px(sx+3,sy-2,10,4,h);px(sx+3,sy+1,10,1,hd);px(sx+7,sy-4,3,2,hd);break;
+    case 'hood':px(sx+2,sy-2,12,4,h);px(sx+2,sy+1,2,6,h);px(sx+12,sy+1,2,6,h);px(sx+2,sy-2,12,1,hd);break;
+    case 'parka':px(sx+2,sy-2,12,4,h);px(sx+2,sy+1,2,6,h);px(sx+12,sy+1,2,6,h);px(sx+3,sy+1,10,1,'#f4f4f4');px(sx+2,sy-2,1,8,'#f4f4f4');px(sx+13,sy-2,1,8,'#f4f4f4');break;
+    case 'chef':px(sx+3,sy,10,1,'#f4f4f4');px(sx+4,sy-5,8,5,'#f4f4f4');px(sx+3,sy-6,4,3,'#f4f4f4');px(sx+9,sy-6,4,3,'#f4f4f4');break;
+    case 'swimcap':px(sx+3,sy-1,10,4,h);px(sx+4,sy-1,3,2,hd);break;
+    case 'bald':px(sx+4,sy,8,2,skin);px(sx+3,sy+1,1,2,h);px(sx+12,sy+1,1,2,h);break;
+  }
+  // face
+  const eye=st.eye||'#1a1c2c';
+  if(dir==='down'){px(sx+6,sy+3,1,2,eye);px(sx+9,sy+3,1,2,eye)}
+  else if(dir==='left'){px(sx+5,sy+3,1,2,eye)}
+  else if(dir==='right'){px(sx+10,sy+3,1,2,eye)}
+  // accessories
+  if(st.glasses&&dir==='down'){px(sx+5,sy+2,3,1,'#1a1c2c');px(sx+8,sy+2,3,1,'#1a1c2c');px(sx+5,sy+3,1,2,'rgba(200,230,255,0.5)');px(sx+9,sy+3,1,2,'rgba(200,230,255,0.5)')}
+  if(st.goggles&&dir==='down'){px(sx+5,sy+2,6,1,'#2a4a6f');px(sx+5,sy+3,2,2,'#7fe3dc');px(sx+9,sy+3,2,2,'#7fe3dc')}
+  if(st.headband)px(sx+3,sy+1,10,1,st.headband);
+  if(st.scarf){px(sx+4,sy+6,8,2,st.scarf);px(sx+11,sy+8,2,2,st.scarf)}
+  if(st.beard){px(sx+5,sy+5,6,2,st.beard);px(sx+6,sy+6,4,1,st.beard)}
+  if(st.blush&&dir==='down'){px(sx+4,sy+4,1,1,'#f5a8c0');px(sx+11,sy+4,1,1,'#f5a8c0')}
+  if(st.earring)px(sx+3,sy+4,1,2,'#f1c40f');
+  if(st.freckles&&dir==='down'){px(sx+5,sy+4,1,1,'#c98f5e');px(sx+10,sy+4,1,1,'#c98f5e')}
+  if(st.crown){px(sx+5,sy-3,6,2,P.gold);px(sx+5,sy-5,1,2,P.gold);px(sx+8,sy-5,1,2,P.gold);px(sx+10,sy-5,1,2,P.gold)}
+  if(st.flower){px(sx+3,sy,2,2,'#f5a8c0');px(sx+4,sy+1,1,1,'#f5e04b')}
+}
+function drawPerson(sx,sy,dir,walkFrame,shirt,hat){
+  drawPersonEx(sx,sy,dir,walkFrame,{top:shirt,hair:hat});
 }
 // the cat hero: calico cat, red scarf, blue overalls — walk cycle w/ tail wag & bob
 function drawCat(sx,sy,dir,walkFrame){
@@ -1143,18 +1226,31 @@ const decor=[
   {f:drawShop,x:92*16,y:150*16,c:'#7a5230'},{f:drawShop,x:100*16,y:150*16,c:'#2f9e44'},
   {f:drawShop,x:108*16,y:150*16,c:'#d4a04a'},{f:drawShop,x:94*16,y:159*16,c:'#3b5bd1'},
   {f:drawShop,x:102*16,y:159*16,c:'#c0392b'},{f:drawShop,x:110*16,y:159*16,c:'#8a7a5a'},
-  {f:drawShop,x:118*16,y:150*16,c:'#1abc9c'},
-  // house row fronts
-  {f:drawHouseFront,x:92*16,y:167*16},{f:drawHouseFront,x:99*16,y:167*16},
-  {f:drawHouseFront,x:106*16,y:167*16},{f:drawHouseFront,x:113*16,y:167*16},
+  {f:drawShop,x:118*16,y:150*16,c:'#1abc9c'},{f:drawShop,x:126*16,y:150*16,c:'#8e44ad'},
+  {f:drawShop,x:86*16,y:150*16,c:'#5aa0c5'},{f:drawShop,x:118*16,y:159*16,c:'#e8734a'},
+  {f:drawShop,x:126*16,y:159*16,c:'#2a8a80'},{f:drawShop,x:86*16,y:159*16,c:'#b56ad1'},
+  // north row big storefronts
+  {f:drawShop,x:87*16,y:142*16,c:'#c56a3d'},{f:drawShop,x:100*16,y:142*16,c:'#3d6a2a'},
+  {f:drawShop,x:105*16,y:142*16,c:'#3d6a2a'},{f:drawShop,x:115*16,y:142*16,c:'#5a7298'},
+  {f:drawShop,x:126*16,y:142*16,c:'#a83226'},
+  // house row fronts (south rows)
+  {f:drawHouseFront,x:86*16,y:167*16},{f:drawHouseFront,x:93*16,y:167*16},
+  {f:drawHouseFront,x:100*16,y:167*16},{f:drawHouseFront,x:107*16,y:167*16},
+  {f:drawHouseFront,x:114*16,y:167*16},{f:drawHouseFront,x:121*16,y:167*16},
+  {f:drawHouseFront,x:128*16,y:167*16},
   // market stalls, benches, vending
   {f:drawStall,x:94.5*16,y:163.2*16},{f:drawStall,x:111*16,y:163.2*16},
+  {f:drawStall,x:99*16,y:146.2*16},{f:drawStall,x:119*16,y:146.2*16},
   {f:drawBench,x:98*16,y:157.6*16},{f:drawBench,x:106*16,y:157.6*16},
-  {f:drawVending,x:118.2*16,y:155.8*16},
+  {f:drawBench,x:92*16,y:148.6*16},{f:drawBench,x:110*16,y:148.6*16},
+  {f:drawVending,x:118.2*16,y:155.8*16},{f:drawVending,x:87.2*16,y:147.8*16},
   // city streetlights
   {f:drawLantern,x:92.4*16,y:157*16},{f:drawLantern,x:116.4*16,y:157*16},
   {f:drawLantern,x:104.4*16,y:157*16},{f:drawLantern,x:96.4*16,y:165.5*16},
   {f:drawLantern,x:112.4*16,y:165.5*16},{f:drawLantern,x:90.4*16,y:152*16},
+  {f:drawLantern,x:88.4*16,y:148.6*16},{f:drawLantern,x:104.4*16,y:148.6*16},
+  {f:drawLantern,x:120.4*16,y:148.6*16},{f:drawLantern,x:128.4*16,y:165.5*16},
+  {f:drawLantern,x:124.4*16,y:152*16},{f:drawLantern,x:84.4*16,y:161*16},
   // stone lanterns lining the main roads
   {f:drawLantern,x:118.4*16,y:70*16},{f:drawLantern,x:122.4*16,y:78*16},
   {f:drawLantern,x:118.4*16,y:52*16},{f:drawLantern,x:100.4*16,y:89*16},
@@ -1179,16 +1275,22 @@ const mini=document.createElement('canvas');mini.width=MW;mini.height=MH;
 
 // ---------- city citizens: they stroll the streets, stop for a chat ----------
 const walkers=[
-  {name:'Momo', color:'#c98fb8',lines:["The bakery smell reaches my","window every single morning.","Best alarm clock ever!"]},
-  {name:'Taro', color:'#5a8ac5',lines:["I moved here from Harbor","Town. Less fish smell,","more noodle smell!"]},
-  {name:'Suki', color:'#c5a05a',lines:["Have you tried the arcade?","Dex NEVER turns the","machines off."]},
-  {name:'Ren',  color:'#6ab04c',lines:["They say a champion walks","these streets...","Wait. Nine badges?! IT'S YOU!"]},
-  {name:'Ayu',  color:'#b05a5a',lines:["The night lanterns here are","prettier than the stars.","Don't tell the stars."]},
-  {name:'Koji', color:'#7a5ab0',lines:["I'm saving coins for the","claw machine.","It ate twelve already..."]},
-  {name:'Nana', color:'#c56a3d',lines:["Granny in the end house","tells the BEST stories.","Knock knock, go listen!"]},
-  {name:'Hiro', color:'#4c8ab0',lines:["One day I'll swim the lagoon","like Marina.","Today I walk. Baby steps."]}
+  {name:'Momo', sx2:88, sy2:156,style:{skin:'#f5d5a8',hs:'bun',hair:'#c98fb8',hairD:'#a86a95',top:'#ffd7ef',apron:'#c98fb8',blush:true},lines:["The bakery smell reaches my","window every single morning.","Best alarm clock ever!"]},
+  {name:'Taro', sx2:97, sy2:156,style:{skin:'#c98f5e',hs:'bucket',hair:'#5a8ac5',top:'#5a8ac5',jacket:'#3d5a80',pants:'#6a5a40'},lines:["I moved here from Harbor","Town. Less fish smell,","more noodle smell!"]},
+  {name:'Suki', sx2:106,sy2:156,style:{skin:'#f5e0c8',hs:'pony',hair:'#c5a05a',hairD:'#a8823d',top:'#e8734a',stripe:'#f4f4f4',earring:true},lines:["Have you tried the arcade?","Dex NEVER turns the","machines off."]},
+  {name:'Ren',  sx2:115,sy2:156,style:{skin:'#8a5a3a',hs:'spiky',hair:'#2e2e3a',top:'#6ab04c',straps:'#3d6a2a',freckles:true},lines:["They say a champion walks","these streets...","Wait. Nine badges?! IT'S YOU!"]},
+  {name:'Ayu',  sx2:92, sy2:165,style:{skin:'#e8b88a',hs:'long',hair:'#b05a5a',hairD:'#8a3d3d',top:'#e8a0b8',flower:true},lines:["The night lanterns here are","prettier than the stars.","Don't tell the stars."]},
+  {name:'Koji', sx2:100,sy2:165,style:{skin:'#f5d5a8',hs:'cap',hair:'#7a5ab0',hairD:'#5a3d8a',top:'#b9b4e8',glasses:true,pants:'#3a3a45'},lines:["I'm saving coins for the","claw machine.","It ate twelve already..."]},
+  {name:'Nana', sx2:110,sy2:165,style:{skin:'#e8c8a8',hs:'curly',hair:'#c56a3d',hairD:'#9a4a28',top:'#f5e04b',blush:true},lines:["Granny in the end house","tells the BEST stories.","Knock knock, go listen!"]},
+  {name:'Hiro', sx2:120,sy2:165,style:{skin:'#c98f5e',hs:'bowl',hair:'#4c8ab0',hairD:'#35688a',top:'#bfe4e8',stripe:'#4c8ab0'},lines:["One day I'll swim the lagoon","like Marina.","Today I walk. Baby steps."]},
+  {name:'Ume',  sx2:88, sy2:148,style:{skin:'#f5e0c8',hs:'long',hair:'#8a8a9a',hairD:'#6a6a7a',top:'#8e6a9a',scarf:'#e8e0c8',glasses:true},lines:["I've lived here since before","the bridge existed.","We rowed EVERYWHERE."]},
+  {name:'Bolt', sx2:100,sy2:148,style:{skin:'#8a5a3a',hs:'beanie',hair:'#f1c40f',hairD:'#d9ac0e',top:'#2e2e3a',stripe:'#f1c40f'},lines:["I've rolled down every","street in this city.","Current record: 9 seconds!"]},
+  {name:'Miya', sx2:114,sy2:148,style:{skin:'#f5d5a8',hs:'bowl',hair:'#3bd1c4',hairD:'#2a9a90',top:'#f4f4f4',jacket:'#3bd1c4',earring:true},lines:["I do the flower boxes on","the north street.","Water them with kindness!"]},
+  {name:'Gou',  sx2:128,sy2:148,style:{skin:'#c98f5e',hs:'bald',hair:'#3d2b1e',top:'#c0392b',apron:'#54341a',beard:'#3d2b1e'},lines:["Retired ramen chef.","The new chef? My student.","Tell them the broth needs","more THUNDER."]},
+  {name:'Pipa', sx2:128,sy2:157,style:{skin:'#e8b88a',hs:'pony',hair:'#e8923a',hairD:'#c96a1e',top:'#7fbf7f',stripe:'#f4f4f4',freckles:true,blush:true},lines:["I named all four team","statues. Don't ask which","name goes with which."]},
+  {name:'Sho',  sx2:120,sy2:157,style:{skin:'#f5e0c8',hs:'hood',hair:'#3d4a66',top:'#3d4a66',jacket:'#2a3550',pants:'#1a1c2c'},lines:["...the beast isle glows","at night.","I've seen it. Twice."]}
 ].map((w,i)=>({...w,
-  x:(i<4?88+(i%4)*9:92+(i%4)*8)*TS+8,y:(i<4?156:165)*TS+8,
+  x:w.sx2*TS+8,y:w.sy2*TS+8,
   dir:'down',t:i*17,pause:0,blocked:false}));
 function updateWalkers(){
   for(const w of walkers){
@@ -1208,7 +1310,7 @@ function drawWalkers(cx,cy){
     const sx=w.x-8-cx,sy=w.y-8-cy;
     if(sx<-30||sx>W+30||sy<-30||sy>H+30)continue;
     shadow(w.x-cx,w.y+8-cy,7,3);
-    drawPerson(sx,sy,w.dir,w.pause>0?0:(w.t/9)|0,w.color,P.black);
+    drawPersonEx(sx,sy,w.dir,w.pause>0?0:(w.t/9)|0,w.style);
   }
 }
 
@@ -1552,21 +1654,25 @@ function drawRoomHouse(){
 }
 const INTERIORS={
   library:{draw:drawRoomLibrary,npc:{x:80,y:70,color:'#8a7a5a',
+    style:{skin:'#e8c8a8',hs:'bun',hair:'#b0b8c5',hairD:'#8a8a9a',top:'#6a5a7a',jacket:'#4a3a5a',glasses:true,pants:'#3a3a45'},
     lines:["Welcome to the Island Library.","Every champion's story is","written here...","They say the beast guards a","warm heart. And coins hide","in flower patches!"]},
     extras:[{x:150,y:216,color:'#5aa0c5',lines:["Shh... this adventure book","has NINE badges in it.","Sounds familiar..."]},
             {x:320,y:230,color:'#b05a8a',lines:["I've read every book on the","middle shelf. Twice."]}],
     blocks:[[34,86,120,42],[180,60,86,60],[276,60,86,60],[372,60,80,60],[180,150,86,60],[276,150,86,60],[372,150,80,60],[150,238,44,34]]},
   grocery:{draw:drawRoomGrocery,npc:{x:400,y:70,color:'#2f9e44',
+    style:{skin:'#c98f5e',hs:'cap',hair:'#2f9e44',hairD:'#1f7a30',top:'#f4f4f4',apron:'#2f9e44',freckles:true,pants:'#6a5a40'},
     lines:["Fresh greens, island fruit,","and frozen fish!","Everything's picked from the","rural isles — support your","local farmers!"]},
     extras:[{x:170,y:200,color:'#c9825a',lines:["Beach-isle mushrooms are on","aisle two. Top shelf stuff!"]},
             {x:290,y:120,color:'#6ab04c',lines:["I only came in for milk.","My basket disagrees."]}],
     blocks:[[90,140,54,110],[200,140,54,110],[310,140,54,110],[352,84,100,38],[28,44,240,30]]},
   bakery:{draw:drawRoomBakery,npc:{x:185,y:70,color:'#e8a0b8',
+    style:{skin:'#f5d5a8',hs:'chef',hair:'#f4f4f4',top:'#f4f4f4',apron:'#e8a0b8',blush:true,pants:'#8a5a6a'},
     lines:["Fresh from the oven!","Mushroom buns, sakura rolls,","snow-sugar loaves...","Champions eat free... one day","when you have all nine badges!"]},
     extras:[{x:230,y:150,color:'#8a7a5a',lines:["I bike from Harbor Town","every day for these buns.","Worth every pedal."]},
             {x:220,y:240,color:'#c98fb8',lines:["The sakura rolls sell out","by noon. You made it!"]}],
     blocks:[[34,26,58,52],[120,84,130,38],[60,170,120,52],[280,150,160,44],[300,220,140,36]]},
   arcade:{draw:drawRoomArcade,npc:{x:240,y:150,color:'#3b5bd1',
+    style:{skin:'#8a5a3a',hs:'spiky',hair:'#b56ad1',hairD:'#8a44ad',top:'#2e2e3a',jacket:'#3b5bd1',stripe:'#7fffd4',glasses:true,pants:'#1a1c2c'},
     lines:["Dex's Arcade! All the island","sports, no sunburn.","Wanna replay a challenge?"],
     opts:[
       {label:'Beach Sprint',fn:()=>startGame(npcs.find(n=>n.id==='sprint'))},
@@ -1578,11 +1684,13 @@ const INTERIORS={
             {x:380,y:260,color:'#6ab04c',lines:["The claw machine ate five","of my coins.","Totally worth it."]}],
     blocks:[[34,40,216,74],[46,150,64,70],[122,150,64,70],[300,40,122,78],[408,150,44,90]]},
   ramen:{draw:drawRoomRamen,npc:{x:240,y:105,color:'#e8649c',
+    style:{skin:'#e8b88a',hs:'flat',hair:'#e8649c',hairD:'#c04a7a',top:'#f4f4f4',headband:'#c0392b',apron:'#3d3020',pants:'#3d3020'},
     lines:["Welcome to the Whirlpool","Noodle Bar!","Today's special: volcano","broth with cloud noodles.","On the house for the hero","who tamed the beast!"]},
     extras:[{x:100,y:140,color:'#8a5a30',lines:["Slurping loudly is a","compliment here.","SLUUURP. See?"]},
             {x:380,y:200,color:'#5aa0c5',lines:["The chef once fed the beast","a thousand noodles.","True story. Probably."]}],
     blocks:[[140,70,60,170],[280,70,60,170],[140,220,200,40],[214,58,52,40]]},
   house:{draw:drawRoomHouse,npc:{x:95,y:130,color:'#b05a8a',
+    style:{skin:'#e8c8a8',hs:'bun',hair:'#e8e4f0',hairD:'#c5c0d8',top:'#b05a8a',apron:'#f4f0e0',glasses:true,blush:true,pants:'#6a4a5a'},
     lines:["Oh, hello dear! Come in,","come in. Tea's warm.","My grandmother helped build","the torii gate at the plaza.","This island loves you —","I can tell."]},
     extras:[{x:395,y:172,cat:true,color:'#e8923a',lines:["(A round orange cat blinks","slowly at you.)","...You feel deeply approved."]}],
     blocks:[[150,44,120,32],[360,150,80,90],[60,150,70,50],[290,22,140,44]]}
@@ -1638,7 +1746,8 @@ function drawInside(){
       drawCatNap(n.x,n.y);
     }else{
       shadow(n.x,n.y+9,7,3);
-      drawPerson(n.x-8,n.y-8,'down',0,n.color,P.black);
+      if(n.style)drawPersonEx(n.x-8,n.y-8,'down',0,n.style);
+      else drawPersonEx(n.x-8,n.y-8,'down',0,{top:n.color,hair:'#3d2b1e',hs:['flat','bowl','curly','cap','long'][((n.x+n.y)/7|0)%5],blush:(n.x+n.y)%3===0});
     }
     if(Math.abs(ipx-n.x)<40&&Math.abs(ipy-n.y)<40)text('!',n.x,n.y-22,P.gold,12,'center');
   }
@@ -1651,7 +1760,8 @@ function drawInside(){
 const coinSpots=[[120,60],[120,75],[100,90],[80,90],[64,90],[56,70],[56,60],[60,50],[66,42],[45,90],
 [52,84],[46,110],[46,125],[52,137],[58,140],[130,92],[150,92],[168,100],[168,115],[168,130],
 [160,141],[175,141],[135,40],[150,40],[120,50],[112,36],[186,45],[196,44],[204,44],[208,48],
-[212,56],[184,92],[176,92],[122,70],[46,102],[96,157],[110,157],[114,120]];
+[212,56],[184,92],[176,92],[122,70],[46,102],[96,157],[110,157],[114,120],
+[88,148],[108,148],[126,148],[86,165],[120,165],[130,157],[76,148]];
 const coins=coinSpots.filter(([x,y])=>!SOLID(T(x,y))).map(([x,y])=>({x:x*TS+8,y:y*TS+8,got:false}));
 function drawCoin(sx,sy){
   const ph=((frame/9)|0)%4;
@@ -1831,8 +1941,8 @@ function drawWorld(){
   for(const n of npcs){
     const sx=n.x*TS-cx,sy=n.y*TS-cy;
     shadow(sx+8,sy+16,7,3);
-    drawPerson(sx,sy,'down',0,n.color,n.id==='delta'?P.gold:P.black);
-    if(n.id==='delta'){px(sx+5,sy-3,6,3,P.gold);px(sx+5,sy-5,1,2,P.gold);px(sx+8,sy-5,1,2,P.gold);px(sx+10,sy-5,1,2,P.gold)}
+    if(n.style)drawPersonEx(sx,sy,'down',0,n.style);
+    else drawPerson(sx,sy,'down',0,n.color,P.black);
     if(n.villager||n.recruit)continue;
     const has=n.id==='delta'?crowned:badges[n.id];
     if(!has&&Math.abs(player.x-(n.x*TS+8))<40&&Math.abs(player.y-(n.y*TS+8))<40){
@@ -2056,7 +2166,7 @@ function drawRace(){
   px(0,150,W,4,P.white);px(0,215,W,4,P.white);px(0,280,W,4,P.white);
   px(W-30,130,6,160,P.white);for(let i=0;i<8;i++)px(W-30,130+i*20,6,10,P.black);
   const sx=x=>20+x*(W-60)/100;
-  drawPerson(sx(mg.rival)-8,165,'right',(mg.rival|0),P.red,P.black);
+  drawPersonEx(sx(mg.rival)-8,165,'right',(mg.rival|0),npcs[0].style);
   drawHero(sx(mg.you)-8,235,'right',(mg.you|0));
   panel(W/2-110,10,220,54);
   text('BEACH SPRINT · 100m',W/2,20,P.gold,12,'center');
@@ -2397,7 +2507,7 @@ function drawGoal(){
   px(100,150,280,6,P.white); // goal line
   const kx=[160,240,320];
   const keeperX=mg.anim>0?kx[mg.kz]:240+Math.sin(frame/30)*24;
-  drawPerson(keeperX-8,108,'down',0,'#222831',P.black);
+  drawPersonEx(keeperX-8,108,'down',0,npcs.find(n=>n.id==='goal').style);
   // ball
   if(mg.anim>30){const t=(55-mg.anim)/25;const bx=240+(kx[mg.bz]-240)*t;const by=300-190*t;
     px(bx-5,by-5,10,10,P.white);px(bx-3,by-3,3,3,'#cfcfcf');}
