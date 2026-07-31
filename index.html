@@ -180,7 +180,7 @@ const SOLID=t=>t===0||t===8||t===3||t===6||t===11||t===12||t===14||t===16||t===2
   bld(94,159,99,163,96,159);    // arcade
   bld(102,159,107,163,104,159); // ramen bar
   bld(110,159,115,163,112,159); // cozy house
-  route(114,104,114,154);       // bridge from the crossroads down to the city
+  route(114,96,114,154);        // clear path from Team Plaza down over the bridge to the city
 })();
 
 // ---------- input ----------
@@ -1558,7 +1558,21 @@ function drawHud(){
 }
 
 // ---------- island map screen ----------
-function updateMap(){if(pressed('m')||pressed('M')||action())state='world'}
+function updateMap(){
+  if(pressed('r')||pressed('R')){
+    state='dialog';sfx.pop();
+    dialog={lines:["Erase ALL progress and start","a brand new adventure?"],idx:0,
+      opts:[
+        {label:"No! Keep my save.",fn:()=>{}},
+        {label:"Yes, erase everything.",fn:()=>{
+          try{localStorage.removeItem('advisland')}catch(e){}
+          location.reload();
+        }}
+      ]};
+    return;
+  }
+  if(pressed('m')||pressed('M')||action())state='world';
+}
 function drawMap(){
   drawWorld();
   px(0,0,W,H,'rgba(26,28,44,0.75)');
@@ -1612,7 +1626,7 @@ function drawMap(){
     text(lbl,W-111,yy+1,P.white,8);
   });
   text(crowned?'GRAND CHAMPION':badgeCount()+'/9 · '+coinCount+' coins'+(tamed?' · 🐾':''),W-86,H-80,P.white,7,'center');
-  text('M or SPACE to close',W/2,H-30,'rgba(244,244,244,0.8)',10,'center');
+  text('M or SPACE to close · R reset game',W/2,H-30,'rgba(244,244,244,0.8)',10,'center');
 }
 
 // ---------- dialog ----------
