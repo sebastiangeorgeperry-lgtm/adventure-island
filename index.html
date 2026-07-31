@@ -170,9 +170,14 @@ const SOLID=t=>t===0||t===8||t===3||t===6||t===11||t===12||t===14||t===16||t===2
   for(let y=89;y<=91;y++)for(let x=118;x<=122;x++)setT(x,y,2); // mossy center patch
   [[116,87],[124,87],[116,93],[124,93]].forEach(([x,y])=>setT(x,y,20)); // statue pedestals
 
-  // ---- CITY ISLAND (south): streets, shops, doors you can walk through ----
-  blob(104,158,18,10,{tree:0.03,flower:0.04});
-  rect(90,155,118,158,10);                                  // main street
+  // ---- CITY ISLAND (south): a real downtown ----
+  blob(104,158,26,14,{tree:0.02,flower:0.03});
+  rect(84,155,124,158,10);      // main street
+  rect(90,164,117,166,10);      // south street
+  rect(90,150,91,163,10);       // west avenue
+  rect(116,150,117,163,10);     // east avenue
+  rect(100,159,101,163,10);     // alley
+  rect(108,159,109,163,10);     // alley
   const bld=(x1,y1,x2,y2,dx,dy)=>{rect(x1,y1,x2,y2,16);setT(dx,dy,22)};
   bld(92,150,97,154,94,154);    // library
   bld(100,150,105,154,102,154); // grocery
@@ -180,6 +185,10 @@ const SOLID=t=>t===0||t===8||t===3||t===6||t===11||t===12||t===14||t===16||t===2
   bld(94,159,99,163,96,159);    // arcade
   bld(102,159,107,163,104,159); // ramen bar
   bld(110,159,115,163,112,159); // cozy house
+  // filler blocks: shops & houses that make it feel like a downtown
+  rect(118,150,123,154,16);     // corner shop
+  rect(92,167,96,169,16);rect(99,167,103,169,16);   // house row south
+  rect(106,167,110,169,16);rect(113,167,117,169,16);
   route(114,96,114,154);        // clear path from Team Plaza down over the bridge to the city
 })();
 
@@ -944,12 +953,17 @@ function drawDayNight(cx,cy){
       ctx.fillStyle=g;
       ctx.beginPath();ctx.arc(sx,sy,34,0,Math.PI*2);ctx.fill();
     }
-    // stars at deep night
+    // stars & moon at deep night
     if(n>0.85){
       for(let i=0;i<24;i++){
         const stx=(i*97+13)%W,sty=(i*61+7)%(H/2);
         if((i+((frame/50)|0))%6)px(stx,sty,1,1,'rgba(255,255,255,0.7)');
       }
+      ctx.globalAlpha=(n-0.85)/0.15*0.9;
+      ctx.fillStyle='#f4f2e4';ctx.beginPath();ctx.arc(W-64,46,16,0,Math.PI*2);ctx.fill();
+      px(W-70,40,4,4,'#d8d4c0');px(W-60,50,3,3,'#d8d4c0');px(W-64,44,2,2,'#e4e0cc');
+      ctx.fillStyle='rgba(244,242,228,0.12)';ctx.beginPath();ctx.arc(W-64,46,26,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=1;
     }
   }
 }
@@ -1059,12 +1073,43 @@ function drawLantern(sx,sy){
 }
 function drawShop(sx,sy,c){
   // storefront dressing over a 6x5-tile building
+  const lit=nightAmount()>0.35;
+  const win=lit?'#ffe9a0':'#bfd8e8',winT=lit?'#e0c060':'#8fb8d0';
   px(sx-2,sy-8,100,14,c);
   px(sx-2,sy-8,100,3,'rgba(0,0,0,0.25)');
   px(sx+30,sy+2,36,12,'#f4f0e0');px(sx+33,sy+5,8,6,c); // sign
-  px(sx+8,sy+22,22,18,'#bfd8e8');px(sx+66,sy+22,22,18,'#bfd8e8');
-  px(sx+8,sy+22,22,4,'#8fb8d0');px(sx+66,sy+22,22,4,'#8fb8d0');
-  px(sx+8,sy+30,22,1,'#8fb8d0');px(sx+66,sy+30,22,1,'#8fb8d0');
+  px(sx+8,sy+22,22,18,win);px(sx+66,sy+22,22,18,win);
+  px(sx+8,sy+22,22,4,winT);px(sx+66,sy+22,22,4,winT);
+  px(sx+8,sy+30,22,1,winT);px(sx+66,sy+30,22,1,winT);
+  if(lit){px(sx+6,sy+40,26,4,'rgba(255,233,160,0.25)');px(sx+64,sy+40,26,4,'rgba(255,233,160,0.25)')}
+}
+function drawHouseFront(sx,sy){
+  // navy-roofed cottage face over a 5x3 building block
+  const lit=nightAmount()>0.35;
+  px(sx-4,sy-12,88,18,'#2e3a52');px(sx-4,sy-12,88,4,'#1f2a40');
+  px(sx-8,sy+2,96,4,'#3d4a66');
+  const w1=lit?'#ffe9a0':'#bfd8e8',w2=lit&&((sx/16)|0)%2?'#ffe9a0':'#bfd8e8';
+  px(sx+8,sy+16,18,14,w1);px(sx+52,sy+16,18,14,w2);
+  px(sx+8,sy+16,18,3,'#c9a860');px(sx+52,sy+16,18,3,'#8fb8d0');
+  px(sx+36,sy+10,8,6,P.gold);px(sx+38,sy+16,4,4,'#8f2a22');
+  if(lit)px(sx+6,sy+30,24,3,'rgba(255,233,160,0.25)');
+}
+function drawStall(sx,sy){
+  px(sx,sy+10,44,16,'#8a5a30');px(sx+2,sy+12,40,6,'#a8743e');
+  px(sx-2,sy-2,48,8,'#c0392b');
+  for(let i=0;i<6;i++)px(sx-2+i*8,sy-2,4,8,'#f4f0e0');
+  px(sx+4,sy+6,10,6,'#f5e04b');px(sx+18,sy+6,10,6,'#2f9e44');px(sx+32,sy+6,8,6,'#e85d75');
+  px(sx+2,sy+26,3,8,'#6b4423');px(sx+39,sy+26,3,8,'#6b4423');
+}
+function drawBench(sx,sy){
+  px(sx,sy,30,5,'#8a5a30');px(sx,sy+5,30,2,'#6b4423');
+  px(sx+2,sy+7,3,5,'#54341a');px(sx+25,sy+7,3,5,'#54341a');
+}
+function drawVending(sx,sy){
+  px(sx,sy-10,18,28,'#c0392b');px(sx+2,sy-8,14,12,'#f4f0e0');
+  px(sx+3,sy-7,4,4,'#3b6bd1');px(sx+9,sy-7,4,4,'#f5e04b');px(sx+3,sy-2,4,4,'#2f9e44');
+  px(sx+2,sy+8,8,6,'#1a1c2c');px(sx+12,sy+6,4,8,'#8f2a22');
+  if(frame%80<40)px(sx+13,sy-9,2,2,'#7fffd4');
 }
 function drawStatue(sx,sy,col){
   // golden champion figure atop the pedestal
@@ -1098,9 +1143,18 @@ const decor=[
   {f:drawShop,x:92*16,y:150*16,c:'#7a5230'},{f:drawShop,x:100*16,y:150*16,c:'#2f9e44'},
   {f:drawShop,x:108*16,y:150*16,c:'#d4a04a'},{f:drawShop,x:94*16,y:159*16,c:'#3b5bd1'},
   {f:drawShop,x:102*16,y:159*16,c:'#c0392b'},{f:drawShop,x:110*16,y:159*16,c:'#8a7a5a'},
+  {f:drawShop,x:118*16,y:150*16,c:'#1abc9c'},
+  // house row fronts
+  {f:drawHouseFront,x:92*16,y:167*16},{f:drawHouseFront,x:99*16,y:167*16},
+  {f:drawHouseFront,x:106*16,y:167*16},{f:drawHouseFront,x:113*16,y:167*16},
+  // market stalls, benches, vending
+  {f:drawStall,x:94.5*16,y:163.2*16},{f:drawStall,x:111*16,y:163.2*16},
+  {f:drawBench,x:98*16,y:157.6*16},{f:drawBench,x:106*16,y:157.6*16},
+  {f:drawVending,x:118.2*16,y:155.8*16},
   // city streetlights
   {f:drawLantern,x:92.4*16,y:157*16},{f:drawLantern,x:116.4*16,y:157*16},
-  {f:drawLantern,x:104.4*16,y:157*16},
+  {f:drawLantern,x:104.4*16,y:157*16},{f:drawLantern,x:96.4*16,y:165.5*16},
+  {f:drawLantern,x:112.4*16,y:165.5*16},{f:drawLantern,x:90.4*16,y:152*16},
   // stone lanterns lining the main roads
   {f:drawLantern,x:118.4*16,y:70*16},{f:drawLantern,x:122.4*16,y:78*16},
   {f:drawLantern,x:118.4*16,y:52*16},{f:drawLantern,x:100.4*16,y:89*16},
@@ -1122,6 +1176,41 @@ const mini=document.createElement('canvas');mini.width=MW;mini.height=MH;
     m.fillRect(x,y,1,1);
   }
 })();
+
+// ---------- city citizens: they stroll the streets, stop for a chat ----------
+const walkers=[
+  {name:'Momo', color:'#c98fb8',lines:["The bakery smell reaches my","window every single morning.","Best alarm clock ever!"]},
+  {name:'Taro', color:'#5a8ac5',lines:["I moved here from Harbor","Town. Less fish smell,","more noodle smell!"]},
+  {name:'Suki', color:'#c5a05a',lines:["Have you tried the arcade?","Dex NEVER turns the","machines off."]},
+  {name:'Ren',  color:'#6ab04c',lines:["They say a champion walks","these streets...","Wait. Nine badges?! IT'S YOU!"]},
+  {name:'Ayu',  color:'#b05a5a',lines:["The night lanterns here are","prettier than the stars.","Don't tell the stars."]},
+  {name:'Koji', color:'#7a5ab0',lines:["I'm saving coins for the","claw machine.","It ate twelve already..."]},
+  {name:'Nana', color:'#c56a3d',lines:["Granny in the end house","tells the BEST stories.","Knock knock, go listen!"]},
+  {name:'Hiro', color:'#4c8ab0',lines:["One day I'll swim the lagoon","like Marina.","Today I walk. Baby steps."]}
+].map((w,i)=>({...w,
+  x:(i<4?88+(i%4)*9:92+(i%4)*8)*TS+8,y:(i<4?156:165)*TS+8,
+  dir:'down',t:i*17,pause:0,blocked:false}));
+function updateWalkers(){
+  for(const w of walkers){
+    w.t++;
+    if(w.pause>0){w.pause--;continue}
+    const sleepy=nightAmount()>0.85?0.65:0.35; // the city dozes off late at night
+    if(w.t%56===0&&Math.random()<sleepy){w.pause=70+Math.random()*100;continue}
+    if(w.t%44===0||w.blocked){w.dir=['up','down','left','right'][(Math.random()*4)|0];w.blocked=false}
+    const d={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[w.dir];
+    const nx=w.x+d[0]*0.55,ny=w.y+d[1]*0.55;
+    const t=T(((nx)/TS)|0,((ny+6)/TS)|0);
+    if(t===10){w.x=nx;w.y=ny}else w.blocked=true;
+  }
+}
+function drawWalkers(cx,cy){
+  for(const w of walkers){
+    const sx=w.x-8-cx,sy=w.y-8-cy;
+    if(sx<-30||sx>W+30||sy<-30||sy>H+30)continue;
+    shadow(w.x-cx,w.y+8-cy,7,3);
+    drawPerson(sx,sy,w.dir,w.pause>0?0:(w.t/9)|0,w.color,P.black);
+  }
+}
 
 // ---------- interiors: walk through any door in the city ----------
 let interior=null,ipx=240,ipy=300,exitDoor=null,doorCd=0,lastTX=-1,lastTY=-1;
@@ -1253,12 +1342,18 @@ function drawRoomHouse(){
 const INTERIORS={
   library:{draw:drawRoomLibrary,npc:{x:80,y:70,color:'#8a7a5a',
     lines:["Welcome to the Island Library.","Every champion's story is","written here...","They say the beast guards a","warm heart. And coins hide","in flower patches!"]},
+    extras:[{x:150,y:216,color:'#5aa0c5',lines:["Shh... this adventure book","has NINE badges in it.","Sounds familiar..."]},
+            {x:320,y:230,color:'#b05a8a',lines:["I've read every book on the","middle shelf. Twice."]}],
     blocks:[[34,86,120,42],[180,60,86,60],[276,60,86,60],[372,60,80,60],[180,150,86,60],[276,150,86,60],[372,150,80,60],[150,238,44,34]]},
   grocery:{draw:drawRoomGrocery,npc:{x:400,y:70,color:'#2f9e44',
     lines:["Fresh greens, island fruit,","and frozen fish!","Everything's picked from the","rural isles — support your","local farmers!"]},
+    extras:[{x:170,y:200,color:'#c9825a',lines:["Beach-isle mushrooms are on","aisle two. Top shelf stuff!"]},
+            {x:290,y:120,color:'#6ab04c',lines:["I only came in for milk.","My basket disagrees."]}],
     blocks:[[90,140,54,110],[200,140,54,110],[310,140,54,110],[352,84,100,38],[28,44,240,30]]},
   bakery:{draw:drawRoomBakery,npc:{x:185,y:70,color:'#e8a0b8',
     lines:["Fresh from the oven!","Mushroom buns, sakura rolls,","snow-sugar loaves...","Champions eat free... one day","when you have all nine badges!"]},
+    extras:[{x:230,y:150,color:'#8a7a5a',lines:["I bike from Harbor Town","every day for these buns.","Worth every pedal."]},
+            {x:220,y:240,color:'#c98fb8',lines:["The sakura rolls sell out","by noon. You made it!"]}],
     blocks:[[34,26,58,52],[120,84,130,38],[60,170,120,52],[280,150,160,44],[300,220,140,36]]},
   arcade:{draw:drawRoomArcade,npc:{x:240,y:150,color:'#3b5bd1',
     lines:["Dex's Arcade! All the island","sports, no sunburn.","Wanna replay a challenge?"],
@@ -1268,12 +1363,17 @@ const INTERIORS={
       {label:'Archery',fn:()=>startGame(npcs.find(n=>n.id==='archery'))},
       {label:'Later.',fn:()=>{}}
     ]},
+    extras:[{x:200,y:250,color:'#e8649c',lines:["I hold the dance pad high","score. Bow before me.","...or challenge me someday!"]},
+            {x:380,y:260,color:'#6ab04c',lines:["The claw machine ate five","of my coins.","Totally worth it."]}],
     blocks:[[34,40,216,74],[46,150,64,70],[122,150,64,70],[300,40,122,78],[408,150,44,90]]},
   ramen:{draw:drawRoomRamen,npc:{x:240,y:105,color:'#e8649c',
     lines:["Welcome to the Whirlpool","Noodle Bar!","Today's special: volcano","broth with cloud noodles.","On the house for the hero","who tamed the beast!"]},
+    extras:[{x:100,y:140,color:'#8a5a30',lines:["Slurping loudly is a","compliment here.","SLUUURP. See?"]},
+            {x:380,y:200,color:'#5aa0c5',lines:["The chef once fed the beast","a thousand noodles.","True story. Probably."]}],
     blocks:[[140,70,60,170],[280,70,60,170],[140,220,200,40],[214,58,52,40]]},
   house:{draw:drawRoomHouse,npc:{x:95,y:130,color:'#b05a8a',
     lines:["Oh, hello dear! Come in,","come in. Tea's warm.","My grandmother helped build","the torii gate at the plaza.","This island loves you —","I can tell."]},
+    extras:[{x:300,y:130,color:'#e8923a',lines:["(A round orange cat blinks","slowly at you.)","...You feel deeply approved."]}],
     blocks:[[150,44,120,32],[360,150,80,90],[60,150,70,50],[290,22,140,44]]}
 };
 function enterRoom(door){
@@ -1309,19 +1409,24 @@ function updateInside(){
     sfx.pop();return;
   }
   if(action()){
-    const n=interior.npc;
-    if(Math.abs(ipx-n.x)<34&&Math.abs(ipy-n.y)<34){
-      if(n.opts){dialog={lines:n.lines,idx:0,opts:n.opts};state='dialog';sfx.pop()}
-      else say(n.lines);
+    const folks=[interior.npc,...(interior.extras||[])];
+    for(const n of folks){
+      if(Math.abs(ipx-n.x)<34&&Math.abs(ipy-n.y)<34){
+        if(n.opts){dialog={lines:n.lines,idx:0,opts:n.opts};state='dialog';sfx.pop()}
+        else say(n.lines);
+        return;
+      }
     }
   }
 }
 function drawInside(){
   interior.draw();
-  const n=interior.npc;
-  shadow(n.x,n.y+9,7,3);
-  drawPerson(n.x-8,n.y-8,'down',0,n.color,P.black);
-  if(Math.abs(ipx-n.x)<40&&Math.abs(ipy-n.y)<40)text('!',n.x,n.y-22,P.gold,12,'center');
+  const folks=[interior.npc,...(interior.extras||[])];
+  for(const n of folks){
+    shadow(n.x,n.y+9,7,3);
+    drawPerson(n.x-8,n.y-8,'down',0,n.color,P.black);
+    if(Math.abs(ipx-n.x)<40&&Math.abs(ipy-n.y)<40)text('!',n.x,n.y-22,P.gold,12,'center');
+  }
   shadow(ipx,ipy+8,7,3);
   drawHero(ipx-8,ipy-8,player.dir,player.walk,0);
   text('walk down through the door to leave',W/2,H-22,'rgba(244,244,244,0.6)',8,'center');
@@ -1401,6 +1506,7 @@ function updateWorld(){
     if(frame%12===0)spawnFootprint();
     if(frame%14===0)sfx.step(T((player.x/TS)|0,((player.y+7)/TS)|0));
   }else player.walk=0;
+  updateWalkers();
   // step through a door? (only when newly stepping onto it)
   if(doorCd>0)doorCd--;
   const ptx=(player.x/TS)|0,pty=((player.y+4)/TS)|0;
@@ -1427,6 +1533,14 @@ function updateWorld(){
     for(const n of npcs){
       const npx=n.x*TS+8,npy=n.y*TS+8;
       if(Math.abs(player.x-npx)<26&&Math.abs(player.y-npy)<26){talkTo(n);return}
+    }
+    // city walkers
+    for(const w of walkers){
+      if(Math.abs(player.x-w.x)<22&&Math.abs(player.y-w.y)<22){
+        w.pause=140;
+        w.dir=player.x<w.x?'left':player.x>w.x+8?'right':player.y<w.y?'up':'down';
+        say(w.lines);return;
+      }
     }
     // the beast of Beast Isle
     if(Math.abs(player.x-(190*TS))<52&&Math.abs(player.y-(96*TS))<44){
@@ -1510,6 +1624,7 @@ function drawWorld(){
       text('!',sx+8,sy-14,P.gold,12,'center');
     }
   }
+  drawWalkers(cx,cy);
   drawSparkles(cx,cy);
   shadow(player.x-cx,player.y+8-cy,7,3);
   drawHero(player.x-8-cx,player.y-8-cy,player.dir,player.walk,player.roll);
