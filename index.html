@@ -1226,11 +1226,40 @@ function roomFrame(wall,floor){
   ctx.strokeStyle='#c9b380';ctx.lineWidth=4;ctx.strokeRect(18,14,W-36,H-42);
   px(W/2-26,H-34,52,20,'#54341a');px(W/2-22,H-32,44,16,'#8a5a30'); // exit doorway
 }
+function drawSteam(x,y){
+  for(let i=0;i<2;i++){
+    const p=(frame/3+i*9)%18;
+    ctx.globalAlpha=0.35*(1-p/18);
+    px(x+Math.sin(frame/14+i*2)*2,y-p,3,3,'#f4f4f4');
+  }
+  ctx.globalAlpha=1;
+}
+function drawCatNap(x,y){
+  const tw=Math.sin(frame/30)>0?1:0;
+  px(x-8,y+4,16,3,'rgba(0,0,0,0.15)');
+  px(x-8,y-2,16,7,'#e8923a');
+  px(x-7,y-1,3,1,'#c96a1e');px(x-1,y,4,1,'#c96a1e');px(x+4,y-1,3,1,'#c96a1e');
+  px(x-7,y-5,8,5,'#e8923a');
+  px(x-7,y-7,2,2,'#e8923a');px(x-2,y-7,2,2,'#e8923a');
+  px(x-6,y-6,1,1,'#f5a8c0');px(x-1,y-6,1,1,'#f5a8c0');
+  px(x-5,y-3,2,1,'#1a1c2c');px(x-2,y-3,2,1,'#1a1c2c');
+  px(x+6,y-4+tw,4,2,'#c96a1e');px(x+8,y-6+tw,2,2,'#c96a1e');
+}
 function shelfBooks(x,y,w,h){
+  px(x-2,y+h,w+4,4,'rgba(0,0,0,0.18)');
   px(x,y,w,h,'#6b4423');px(x+3,y+3,w-6,h-6,'#54341a');
   const cols=['#c0392b','#3b6bd1','#2f9e44','#e8c93e','#e67e22','#8e44ad','#c9825a'];
-  for(let r=0;r<Math.floor((h-10)/13);r++)for(let c=0;c<Math.floor((w-10)/7);c++){
-    px(x+5+c*7,y+5+r*13,5,10,cols[(x+r*3+c)%7]);
+  const rows=Math.floor((h-10)/13);
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<Math.floor((w-10)/7);c++){
+      const k=(x+r*3+c)%9;
+      if(k===8)continue;                       // a gap on the shelf
+      if(k===7){                               // a leaning book
+        px(x+5+c*7+1,y+7+r*13,5,8,cols[(x+r+c)%7]);
+        px(x+5+c*7+2,y+5+r*13,4,3,cols[(x+r+c)%7]);
+      }else px(x+5+c*7,y+5+r*13,5,10,cols[k%7]);
+    }
+    px(x+3,y+15+r*13,w-6,2,'#3d2b14');         // shelf board
   }
 }
 function drawRoomLibrary(){
@@ -1238,12 +1267,30 @@ function drawRoomLibrary(){
   for(let i=0;i<10;i++)px(20,84+i*24,W-40,1,'#6b4c2e');
   px(28,20,120,26,'#e8e0c8');px(300,20,120,26,'#e8e0c8'); // paper windows
   for(let i=0;i<5;i++){px(32+i*24,22,1,22,'#8a7a5a');px(304+i*24,22,1,22,'#8a7a5a')}
+  // hanging lamps with warm glow
+  for(const lx of [230,340]){
+    px(lx,16,2,14,'#54341a');px(lx-5,30,12,7,'#e8c93e');px(lx-3,33,8,3,'#fff3b0');
+    ctx.fillStyle='rgba(255,233,160,0.10)';ctx.beginPath();ctx.arc(lx+1,44,26,0,Math.PI*2);ctx.fill();
+  }
   shelfBooks(180,60,86,60);shelfBooks(276,60,86,60);shelfBooks(372,60,80,60);
   shelfBooks(180,150,86,60);shelfBooks(276,150,86,60);shelfBooks(372,150,80,60);
-  px(34,86,120,42,'#9c6b3f');px(34,86,120,6,'#b0824f'); // counter
-  px(44,74,14,10,'#c0392b');px(64,74,14,10,'#3b6bd1');px(120,74,14,10,'#2f9e44'); // books on counter
-  px(150,238,44,34,'#8a5a30');px(154,242,36,26,'#a8743e'); // reading table
-  px(158,246,12,8,'#c0392b');px(174,248,12,8,'#3b6bd1');
+  // ladder leaning on a shelf
+  px(452,140,3,70,'#a8743e');px(444,150,3,60,'#a8743e');
+  for(let i=0;i<5;i++)px(444,155+i*11,11,2,'#8a5a30');
+  // front desk: grain, book stacks, globe, bell
+  px(34,86,120,42,'#9c6b3f');px(34,86,120,6,'#b0824f');
+  for(let i=0;i<4;i++)px(40+i*28,94,1,30,'#8a5a30');
+  px(34,124,120,4,'rgba(0,0,0,0.15)');
+  px(44,78,14,4,'#c0392b');px(46,74,12,4,'#3b6bd1');px(48,70,10,4,'#2f9e44'); // stacked books
+  px(120,68,14,14,'#3b6bd1');px(122,70,10,10,'#5a8ac5');px(126,64,2,4,'#8a5a30'); // globe
+  px(96,76,8,6,'#e8c93e');px(98,74,4,2,'#b8860b'); // desk bell
+  // cozy reading corner: rug, table w/ open book & tea
+  ctx.fillStyle='#8a4a3a';ctx.beginPath();ctx.ellipse(172,258,52,24,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#a85a44';ctx.beginPath();ctx.ellipse(172,258,38,16,0,0,Math.PI*2);ctx.fill();
+  px(150,238,44,34,'#8a5a30');px(154,242,36,26,'#a8743e');
+  px(158,246,13,9,'#f4f0e0');px(171,246,13,9,'#e8e0c8'); // open book
+  for(let i=0;i<3;i++){px(160,248+i*2,9,1,'#b0a890');px(173,248+i*2,9,1,'#b0a890')}
+  px(184,258,7,6,'#bfe4e8');drawSteam(186,256); // tea
 }
 function drawAisle(x,y){
   // stocked shelf unit: frame, boards, and real products
@@ -1345,65 +1392,163 @@ function drawRoomBakery(){
   px(300,220,140,36,'#8a5a30');px(304,224,132,28,'#a8743e');px(300,252,140,4,'rgba(0,0,0,0.12)');
   for(let i=0;i<4;i++)drawCake(312+i*32,228);
 }
+function drawCabinet(x,y,i){
+  px(x-2,y+72,68,5,'rgba(0,0,0,0.25)');
+  px(x,y,64,74,'#1e2a45');px(x,y,64,4,'#2e3a5c');
+  // blinking marquee
+  const mc=['#e85d75','#f5e04b','#2f9e44','#3b6bd1'];
+  for(let m=0;m<6;m++)px(x+4+m*10,y+2,6,4,((frame/12)|0+m+i)%2?mc[(m+i)%4]:'#101322');
+  // animated game screen
+  px(x+4,y+10,56,36,'#0a0e1e');
+  const bx=x+8+Math.abs(((frame*1.4+i*31)%88)-44);
+  const by=y+14+Math.abs(((frame+i*17)%48)-24)*0.5;
+  px(bx,by,5,5,mc[i%4]);                              // bouncing ball
+  px(x+8+((frame/2+i*23)%44),y+40,14,3,'#eaf6ff');    // paddle chasing
+  for(let s=0;s<3;s++)px(x+48,y+14+s*6,8,3,'#2f9e44'); // score bars
+  // controls
+  px(x+6,y+52,52,16,'#2e3a5c');
+  px(x+14,y+55,4,8,'#101322');px(x+13,y+53,6,4,'#c0392b'); // joystick
+  px(x+32,y+58,7,7,'#e8c93e');px(x+44,y+58,7,7,'#e85d75'); // buttons
+  px(x+33,y+59,3,2,'#fff3b0');px(x+45,y+59,3,2,'#ffd7ef');
+  px(x+26,y+69,12,4,'#101322');                        // coin slot
+}
+function drawPlush(x,y,c){
+  px(x,y+2,10,8,c);px(x+1,y,3,3,c);px(x+6,y,3,3,c);
+  px(x+2,y+4,2,2,'#1a1c2c');px(x+6,y+4,2,2,'#1a1c2c');
+  px(x+4,y+7,2,1,'#8a4a3a');
+}
 function drawRoomArcade(){
   roomFrame('#2a3550','#3b5bd1');
   for(let y=0;y<8;y++)for(let x=0;x<14;x++)if((x+y)%2)px(20+x*32,76+y*30,32,30,'#5573e8');
-  // cabinet rows
-  for(let i=0;i<3;i++){
-    px(34+i*76,40,64,74,'#1e2a45');px(38+i*76,48,56,34,'#eaf6ff');px(40+i*76,50,20,10,'#fff');
-    px(44+i*76,90,12,6,'#c0392b');px(64+i*76,90,12,6,'#e8c93e');px(50+i*76,44,4,4,'#8e44ad');
-  }
+  for(let i=0;i<9;i++)px((i*89+40)%420+30,(i*53)%180+90,8,2,'rgba(0,0,0,0.12)'); // floor scuffs
+  // neon squiggle sign
+  const non=frame%90<70;
+  px(180,26,100,16,'#101322');
+  if(non){px(186,30,20,3,'#7fffd4');px(212,30,3,8,'#ff9ff3');px(220,34,20,3,'#7fffd4');
+    px(246,30,3,8,'#ffd21a');px(254,30,20,3,'#ff9ff3')}
+  // cabinets
+  drawCabinet(34,40,0);drawCabinet(110,40,1);drawCabinet(186,40,2);
+  drawCabinet(46,150,3);drawCabinet(122,150,4);
+  // claw machines with plushie piles & swinging claw
   for(let i=0;i<2;i++){
-    px(46+i*76,150,64,70,'#1e2a45');px(50+i*76,158,56,32,'#eaf6ff');
-    px(54+i*76,196,12,6,'#c0392b');px(74+i*76,196,12,6,'#e8c93e');
+    const cx2=300+i*66;
+    px(cx2-2,114,60,5,'rgba(0,0,0,0.25)');
+    px(cx2,40,56,78,'#e8a0c8');px(cx2,40,56,5,'#d97ba0');
+    px(cx2+6,48,44,42,'#fff0f8');
+    px(cx2+8,50,14,8,'rgba(255,255,255,0.8)');       // glass shine
+    const clx=cx2+16+Math.sin(frame/40+i*2)*10;
+    px(clx,50,2,12,'#9aa0ad');px(clx-3,62,3,5,'#9aa0ad');px(clx+2,62,3,5,'#9aa0ad'); // claw
+    drawPlush(cx2+8,76,'#e8c93e');drawPlush(cx2+20,80,'#7fbf7f');drawPlush(cx2+32,76,'#ff9ff3');
+    px(cx2+6,96,20,10,'#f5e04b');px(cx2+34,98,12,8,'#101322'); // controls + chute
   }
-  // claw machines
-  for(let i=0;i<2;i++){
-    px(300+i*66,40,56,78,'#e8a0c8');px(306+i*66,48,44,42,'#fff0f8');
-    px(318+i*66,54,10,12,'#3b6bd1');px(310+i*66,76,10,8,'#f5e04b');px(326+i*66,78,10,8,'#2f9e44');
-    px(306+i*66,96,20,10,'#f5e04b');
-  }
-  // dance pad
+  // dance pad with arrows & pulse
+  const pu=frame%50<25;
   ctx.fillStyle='#e8a0c8';ctx.beginPath();ctx.arc(240,240,42,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#bfe4f8';ctx.beginPath();ctx.arc(240,236,32,0,Math.PI*2);ctx.fill();
-  // prize shelf
-  px(408,150,44,90,'#1e2a45');px(412,158,36,16,'#f5e04b');px(412,182,36,16,'#e85d75');px(412,206,36,16,'#2f9e44');
+  ctx.fillStyle=pu?'#d4f0ff':'#bfe4f8';ctx.beginPath();ctx.arc(240,236,32,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=pu?'#7fbfe8':'#9ccfec';
+  ctx.beginPath();ctx.moveTo(240,214);ctx.lineTo(233,224);ctx.lineTo(247,224);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(240,256);ctx.lineTo(233,247);ctx.lineTo(247,247);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(219,236);ctx.lineTo(229,229);ctx.lineTo(229,243);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(261,236);ctx.lineTo(251,229);ctx.lineTo(251,243);ctx.closePath();ctx.fill();
+  // prize shelf: trophy, plushies, star
+  px(406,148,48,94,'rgba(0,0,0,0.2)');
+  px(408,150,44,90,'#1e2a45');px(408,150,44,4,'#2e3a5c');
+  px(418,158,20,4,'#b8860b');px(422,148,12,10,'#f5e04b');px(420,146,16,4,'#f5e04b'); // trophy
+  drawPlush(412,178,'#ff9ff3');drawPlush(428,178,'#7fbf7f');
+  px(424,206,8,8,'#f5e04b');px(426,202,4,4,'#f5e04b');px(422,210,3,3,'#f5e04b');px(431,210,3,3,'#f5e04b'); // star
+  px(410,172,40,2,'#101322');px(410,196,40,2,'#101322');px(410,220,40,2,'#101322');
+}
+function drawBowl(bx,by){
+  px(bx-1,by+11,22,3,'rgba(0,0,0,0.2)');
+  px(bx,by,20,12,'#c0392b');px(bx+2,by+10,16,2,'#8f2a22');
+  px(bx+1,by+1,18,3,'#e8e0c8');                     // broth rim
+  for(let n=0;n<4;n++)px(bx+3+n*4,by+2,2,3,'#f5e04b'); // noodles
+  px(bx+4,by-2,5,4,'#2f9e44');px(bx+11,by-1,5,3,'#ffd7ef'); // toppings
+  px(bx+21,by-4,2,12,'#8a5a30');px(bx+23,by-5,2,12,'#8a5a30'); // chopsticks
+  drawSteam(bx+8,by-4);
 }
 function drawRoomRamen(){
   roomFrame('#2e2418','#3d3020');
-  for(let i=0;i<6;i++)px(30+i*36,20,22,40,'#e8e0c8'); // hanging menus
-  px(250,24,60,30,'#bfe4e8');px(330,26,50,26,'#e8e0c8');
-  // U counter
+  for(let i=0;i<9;i++)px(20,86+i*22,W-40,1,'#2e2418');
+  // hanging menus with brush marks & prices
+  for(let i=0;i<6;i++){
+    const mx2=30+i*36;
+    px(mx2,18,22,42,'#e8e0c8');px(mx2,18,22,4,'#c0392b');
+    for(let l=0;l<4;l++)px(mx2+5,26+l*7,12,2,'#54341a');
+    px(mx2+7,54,8,3,'#c0392b');
+  }
+  // noren curtain over the kitchen
+  for(let i=0;i<5;i++){px(214+i*11,16,9,26,'#2a4a6f');px(214+i*11,16,9,4,'#1e3550')}
+  px(230,24,18,10,'#e8e0c8');
+  // fish banner
+  px(390,22,44,16,'#e85d75');px(430,26,8,8,'#c9385a');px(396,26,5,5,'#f4f4f4');px(398,28,2,2,'#1a1c2c');
+  // U counter with grain & edge shading
   px(140,70,60,170,'#c96a3a');px(280,70,60,170,'#c96a3a');px(140,220,200,40,'#c96a3a');
   px(146,76,48,158,'#a84e28');px(286,76,48,158,'#a84e28');px(160,226,160,28,'#a84e28');
-  // pot + kitchen
-  px(214,58,52,40,'#9aa0ad');px(220,64,40,20,'#e8f4ff');
-  // bowls on the counter
-  for(const [bx,by] of [[152,90],[152,130],[152,170],[316,110],[316,160],[200,228],[268,228]]){
-    px(bx,by,20,12,'#c0392b');px(bx+3,by-3,14,6,'#2f9e44');px(bx+6,by-2,6,3,'#f5e04b');
-  }
-  // stools
+  for(let i=0;i<7;i++){px(150,84+i*22,40,1,'#8f3f1e');px(290,84+i*22,40,1,'#8f3f1e')}
+  px(140,236,200,4,'rgba(0,0,0,0.2)');
+  // kitchen: big pot with steam, ladle, sake shelf
+  px(210,54,60,44,'#7a808d');px(214,58,52,40,'#9aa0ad');
+  px(220,64,40,20,'#e8f4ff');px(224,68,32,12,'#d0e8f0');
+  drawSteam(232,60);drawSteam(248,58);
+  px(266,50,3,20,'#8a5a30');px(263,46,9,6,'#9aa0ad');  // ladle
+  px(150,52,44,10,'#54341a');
+  for(let i=0;i<4;i++)px(153+i*11,42,7,12,['#2a6f8f','#e8e0c8','#8f2a22','#2f9e44'][i]); // sake bottles
+  // bowls all around the counter
+  for(const [bx,by] of [[150,92],[150,132],[150,172],[314,112],[314,162],[200,226],[264,226]])drawBowl(bx,by);
+  // stools with legs & shadows
   for(const [sx2,sy2] of [[100,110],[100,170],[100,230],[380,110],[380,170],[380,230]]){
+    px(sx2-10,sy2+8,20,3,'rgba(0,0,0,0.2)');
+    px(sx2-3,sy2+4,2,8,'#54341a');px(sx2+2,sy2+4,2,8,'#54341a');
     ctx.fillStyle='#a83226';ctx.beginPath();ctx.ellipse(sx2,sy2,14,8,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#c0453a';ctx.beginPath();ctx.ellipse(sx2,sy2-2,10,5,0,0,Math.PI*2);ctx.fill();
   }
 }
 function drawRoomHouse(){
   roomFrame('#a8a0c0','#c9b896');
   for(let i=0;i<10;i++)px(20,84+i*24,W-40,1,'#b0a080');
-  // window with a view of the bay
+  // window: curtains + living bay view
+  px(286,18,148,52,'#54341a');
   px(290,22,140,44,'#2a4a6f');px(296,28,128,32,'#8fd3f0');px(300,44,120,14,'#3978a8');
+  if((frame/20|0)%3===0)px(316+(frame/4%90),48,6,1,'rgba(255,255,255,0.8)'); // wave glint
   px(310,32,14,10,'#eef2f5');px(350,30,20,12,'#f4f4f4');
-  // kitchen
-  px(150,44,120,32,'#7a92b8');px(150,44,120,8,'#5a7298');px(160,54,20,14,'#3d3d45');px(240,52,18,16,'#e8f4ff');
-  // bed
-  px(360,150,80,90,'#8a5a30');px(366,156,68,26,'#e8d5b0');px(366,182,68,52,'#7fbf7f');px(366,182,68,8,'#5f9f5f');
-  // tea table
+  px(340,40,8,4,'#e8e0c8');px(342,38,4,2,'#c9b380');      // little sailboat out there
+  px(290,22,12,44,'#c98fb8');px(412,22,12,44,'#c98fb8');   // curtains
+  px(290,22,12,4,'#b06a9a');px(412,22,12,4,'#b06a9a');
+  // framed photos
+  px(60,28,22,18,'#8a5a30');px(63,31,16,12,'#8fd3f0');px(66,36,6,5,'#2f9e44');
+  px(94,26,18,22,'#8a5a30');px(97,29,12,16,'#e8d5b0');px(99,33,8,6,'#c98fb8');
+  // kitchen: sink, stove with kettle, cup shelf
+  px(150,44,120,32,'#7a92b8');px(150,44,120,8,'#5a7298');px(150,72,120,4,'rgba(0,0,0,0.15)');
+  px(160,54,20,14,'#3d3d45');px(166,48,3,8,'#9aa0ad');px(163,48,8,2,'#9aa0ad'); // sink + faucet
+  px(196,54,26,16,'#3d3d45');
+  ctx.fillStyle='#c0392b';ctx.beginPath();ctx.arc(203,60,4,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#c0392b';ctx.beginPath();ctx.arc(215,60,4,0,Math.PI*2);ctx.fill(); // burners
+  px(232,50,20,14,'#9aa0ad');px(250,54,6,4,'#9aa0ad');px(238,46,8,4,'#7a808d');   // kettle
+  drawSteam(240,44);
+  px(150,30,60,10,'#8a5a30');
+  for(let i=0;i<4;i++)px(154+i*14,32,8,7,['#bfe4e8','#ffd7ef','#e8e0c8','#b9b4e8'][i]); // cups
+  // bed: pillow + striped quilt
+  px(356,146,88,98,'rgba(0,0,0,0.12)');
+  px(360,150,80,90,'#8a5a30');px(360,150,80,5,'#a8743e');
+  px(366,156,68,26,'#e8d5b0');px(372,160,28,14,'#f4f0e0');px(372,160,28,3,'#d8d0b8'); // pillow
+  px(366,182,68,52,'#7fbf7f');px(366,182,68,8,'#5f9f5f');
+  for(let i=0;i<4;i++)px(366,196+i*10,68,3,'#6faf6f');   // quilt stripes
+  // tea table: pot with steam, cups, cookies
+  px(56,146,78,58,'rgba(0,0,0,0.10)');
   px(60,150,70,50,'#8a5a30');px(64,154,62,42,'#a8743e');
-  px(74,160,18,14,'#e8f4ff');px(100,164,12,10,'#7a92b8');
-  // rug
+  px(72,160,20,14,'#bfe4e8');px(90,164,6,6,'#bfe4e8');px(78,155,8,5,'#bfe4e8'); // teapot
+  drawSteam(80,154);
+  px(102,162,10,8,'#ffd7ef');px(102,174,10,8,'#e8e0c8'); // cups
+  px(70,182,24,10,'#e8d5b0');px(74,184,6,5,'#c9825a');px(84,184,6,5,'#c9825a'); // cookie plate
+  // patterned rug
   ctx.fillStyle='#9fbf7f';ctx.beginPath();ctx.ellipse(240,210,58,30,0,0,Math.PI*2);ctx.fill();
   ctx.fillStyle='#b8d8a0';ctx.beginPath();ctx.ellipse(240,210,42,20,0,0,Math.PI*2);ctx.fill();
-  px(300,240,10,8,'#5f9f5f');px(316,244,8,6,'#5f9f5f'); // little plants
+  ctx.fillStyle='#9fbf7f';ctx.beginPath();ctx.ellipse(240,210,26,12,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#d4e8c0';ctx.beginPath();ctx.ellipse(240,210,12,6,0,0,Math.PI*2);ctx.fill();
+  // potted plants
+  px(298,238,14,10,'#8a4a3a');px(300,230,4,9,'#5f9f5f');px(305,228,4,11,'#7fbf7f');px(295,232,4,7,'#5f9f5f');
+  px(320,242,10,8,'#8a4a3a');px(322,236,3,7,'#7fbf7f');px(326,234,3,9,'#5f9f5f');
 }
 const INTERIORS={
   library:{draw:drawRoomLibrary,npc:{x:80,y:70,color:'#8a7a5a',
@@ -1439,7 +1584,7 @@ const INTERIORS={
     blocks:[[140,70,60,170],[280,70,60,170],[140,220,200,40],[214,58,52,40]]},
   house:{draw:drawRoomHouse,npc:{x:95,y:130,color:'#b05a8a',
     lines:["Oh, hello dear! Come in,","come in. Tea's warm.","My grandmother helped build","the torii gate at the plaza.","This island loves you —","I can tell."]},
-    extras:[{x:300,y:130,color:'#e8923a',lines:["(A round orange cat blinks","slowly at you.)","...You feel deeply approved."]}],
+    extras:[{x:395,y:172,cat:true,color:'#e8923a',lines:["(A round orange cat blinks","slowly at you.)","...You feel deeply approved."]}],
     blocks:[[150,44,120,32],[360,150,80,90],[60,150,70,50],[290,22,140,44]]}
 };
 function enterRoom(door){
@@ -1489,8 +1634,12 @@ function drawInside(){
   interior.draw();
   const folks=[interior.npc,...(interior.extras||[])];
   for(const n of folks){
-    shadow(n.x,n.y+9,7,3);
-    drawPerson(n.x-8,n.y-8,'down',0,n.color,P.black);
+    if(n.cat){
+      drawCatNap(n.x,n.y);
+    }else{
+      shadow(n.x,n.y+9,7,3);
+      drawPerson(n.x-8,n.y-8,'down',0,n.color,P.black);
+    }
     if(Math.abs(ipx-n.x)<40&&Math.abs(ipy-n.y)<40)text('!',n.x,n.y-22,P.gold,12,'center');
   }
   shadow(ipx,ipy+8,7,3);
