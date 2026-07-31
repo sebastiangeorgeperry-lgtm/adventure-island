@@ -1245,39 +1245,105 @@ function drawRoomLibrary(){
   px(150,238,44,34,'#8a5a30');px(154,242,36,26,'#a8743e'); // reading table
   px(158,246,12,8,'#c0392b');px(174,248,12,8,'#3b6bd1');
 }
+function drawAisle(x,y){
+  // stocked shelf unit: frame, boards, and real products
+  px(x-3,y+106,60,6,'rgba(0,0,0,0.12)');          // floor shadow
+  px(x,y,54,110,'#88b8a8');
+  px(x+2,y+2,50,106,'#9ccab8');
+  px(x,y,54,6,'#6e9e8e');px(x,y+4,54,2,'#5e8a7a');
+  for(let t2=0;t2<3;t2++){
+    const sy2=y+12+t2*32;
+    // items sit on the board
+    for(let c=0;c<5;c++){
+      const ix=x+4+c*10;
+      const kind=(t2*5+c+((x/10)|0))%4;
+      if(kind===0){ // bottle
+        px(ix+2,sy2+4,5,16,['#c0392b','#2f9e44','#e67e22'][(c+t2)%3]);
+        px(ix+3,sy2+1,3,4,'#54341a');
+        px(ix+3,sy2+9,3,6,'#f4f0e0');
+      }else if(kind===1){ // can
+        px(ix+1,sy2+10,7,10,'#b5bbc8');
+        px(ix+1,sy2+10,7,2,'#dce2ec');
+        px(ix+2,sy2+13,5,5,['#e85d75','#f5e04b','#3b6bd1'][(c+t2)%3]);
+      }else if(kind===2){ // box
+        px(ix,sy2+8,8,12,['#e8a13a','#b56ad1','#5aa0c5'][(c+t2)%3]);
+        px(ix+1,sy2+12,6,3,'#f4f0e0');
+        px(ix,sy2+8,8,2,'rgba(0,0,0,0.15)');
+      }else{ // produce basket
+        px(ix,sy2+14,9,6,'#8a5a30');px(ix,sy2+14,9,1,'#6b4423');
+        px(ix+1,sy2+9,3,6,'#e85d75');px(ix+4,sy2+8,3,7,'#7fbf3f');px(ix+6,sy2+10,3,5,'#e8a13a');
+      }
+    }
+    px(x+2,sy2+20,50,4,'#7aa896');               // shelf board
+    px(x+2,sy2+24,50,2,'#5e8a7a');
+  }
+}
 function drawRoomGrocery(){
   roomFrame('#bfe0d8','#dff0ea');
   for(let y=0;y<8;y++)for(let x=0;x<14;x++)if((x+y)%2)px(20+x*32,76+y*30,32,30,'#cfeae2');
-  // freezer wall
-  for(let i=0;i<6;i++){px(28+i*40,44,36,30,'#9cc8e8');px(28+i*40,44,36,8,'#7aa8cc');px(32+i*40,56,10,8,'#e8f4ff');px(46+i*40,58,8,6,'#ffd7ef')}
-  // aisles
-  for(let a=0;a<3;a++){
-    const ax=90+a*110;
-    px(ax,140,54,110,'#a8d8c8');px(ax,140,54,8,'#88b8a8');
-    for(let r=0;r<4;r++)for(let c=0;c<6;c++)px(ax+5+c*8,152+r*24,6,10,['#e85d75','#f5e04b','#e67e22','#2f9e44','#c9825a','#b9b4e8'][(a+r+c)%6]);
+  // freezer wall: glass cases with frozen fish & ice
+  for(let i=0;i<6;i++){
+    const fx=28+i*40;
+    px(fx,42,36,34,'#7aa8cc');
+    px(fx+2,44,32,26,'#bfe0f4');
+    px(fx+3,45,12,8,'rgba(255,255,255,0.7)');       // glass shine
+    // frozen goods inside
+    px(fx+5,58,12,5,'#8fb8d0');px(fx+15,60,4,3,'#6a98b0'); // fish
+    px(fx+22,56,8,8,'#ffd7ef');px(fx+23,54,6,2,'#e8b0d0'); // dessert
+    px(fx+6,52,8,4,'#e8f4ff');                       // ice bag
+    px(fx,70,36,6,'#5a88a8');px(fx+15,71,6,3,'#3d5a74'); // handle
   }
-  // counter right
+  drawAisle(90,140);drawAisle(200,140);drawAisle(310,140);
+  // counter right: register, basket, produce scale
   px(352,84,100,38,'#a8d8b8');px(352,84,100,6,'#88b898');
-  px(362,74,16,10,'#8a5a30');px(384,72,12,12,'#3d3d45');
+  px(352,118,100,4,'rgba(0,0,0,0.12)');
+  px(360,68,16,16,'#3d3d45');px(362,70,12,7,'#7fffd4');px(363,78,10,4,'#2a2a33'); // register
+  px(384,74,18,10,'#8a5a30');px(386,70,4,5,'#e85d75');px(392,69,4,6,'#7fbf3f');px(397,72,4,4,'#e8a13a'); // basket
+  px(414,70,14,12,'#9aa0ad');px(417,66,8,4,'#7a808d');px(418,74,6,4,'#f5e04b'); // scale
+}
+function drawLoaf(x,y,c,dark){
+  px(x+1,y,14,4,c);px(x,y+2,16,8,c);            // rounded loaf
+  px(x+1,y+1,14,2,'rgba(255,255,255,0.30)');    // crust shine
+  px(x+3,y+2,2,6,dark);px(x+7,y+2,2,6,dark);px(x+11,y+2,2,6,dark); // score marks
+  px(x,y+9,16,2,'rgba(0,0,0,0.18)');
+}
+function drawBun(x,y,c){
+  px(x+1,y+1,8,6,c);px(x+2,y,6,2,c);
+  px(x+2,y+1,4,2,'rgba(255,255,255,0.35)');
+  px(x+4,y+3,2,2,'#8a5a30');
+}
+function drawCake(x,y){
+  px(x,y+4,14,6,'#ffd7ef');px(x+1,y+2,12,3,'#fff0f8');
+  px(x+3,y,2,3,'#c0392b');px(x+8,y,2,3,'#c0392b');
+  px(x,y+10,14,2,'rgba(0,0,0,0.15)');
 }
 function drawRoomBakery(){
   roomFrame('#c9a06a','#9c7346');
   for(let i=0;i<10;i++)px(20,84+i*24,W-40,1,'#8a6238');
-  // oven
-  px(34,26,58,52,'#54341a');px(44,42,38,30,'#2a1608');px(48,48,30,18,'#c0392b');px(52,52,10,8,'#ff8c1a');
-  // counter with baker
+  // stone oven with fire glow
+  px(30,22,66,58,'#6a6a7a');px(34,26,58,52,'#54341a');
+  px(44,42,38,32,'#2a1608');px(48,50,30,20,'#c0392b');
+  px(52,56,20,10,'#ff8c1a');px(56,58,10,6,'#ffd21a');
+  if(frame%30<15)px(60,54,4,4,'#fff3b0');
+  // counter: register, buns, price card
   px(120,84,130,38,'#8a5a30');px(120,84,130,6,'#a8743e');
-  px(130,74,10,8,'#f5e04b');px(144,74,10,8,'#f5e04b');px(226,72,14,12,'#9aa0ad'); // buns + register
-  // bread wall shelf
-  px(280,40,172,26,'#8a5a30');
-  for(let i=0;i<8;i++)px(286+i*21,44,16,12,['#c9825a','#b06a3a','#e8c07a'][i%3]);
-  // display tables
-  px(60,170,120,52,'#8a5a30');px(64,174,112,44,'#a8743e');
-  for(let i=0;i<4;i++)px(72+i*26,182,18,14,['#e8c07a','#c9825a','#ffd7ef','#f5e04b'][i%4]);
-  px(280,150,160,44,'#8a5a30');px(284,154,152,36,'#a8743e');
-  for(let i=0;i<6;i++)px(290+i*24,160,16,12,['#b06a3a','#fff','#e8a0b8'][i%3]);
-  px(300,220,140,36,'#8a5a30');px(304,224,132,28,'#a8743e');
-  for(let i=0;i<5;i++)px(312+i*25,230,16,12,['#e67e22','#c9825a','#8a5a30'][i%3]);
+  px(120,118,130,4,'rgba(0,0,0,0.12)');
+  drawBun(128,70,'#e8c07a');drawBun(140,70,'#c9825a');drawBun(152,70,'#e8c07a');
+  px(226,66,16,16,'#3d3d45');px(228,68,12,7,'#7fffd4'); // register
+  px(200,72,18,10,'#f4f0e0');px(203,75,12,2,'#8a6238'); // price card
+  // bread wall shelf with loaves
+  px(280,38,172,30,'#8a5a30');px(280,38,172,4,'#a8743e');
+  for(let i=0;i<8;i++)drawLoaf(286+i*21,46,['#c9825a','#b06a3a','#e8c07a'][i%3],'#8a5a30');
+  // display tables: waffles, dough bowl, cakes
+  px(60,170,120,52,'#8a5a30');px(64,174,112,44,'#a8743e');px(60,218,120,4,'rgba(0,0,0,0.12)');
+  for(let i=0;i<3;i++){px(72+i*34,182,20,16,'#e8c07a');px(74+i*34,184,16,12,'#d4a850');
+    for(let g=0;g<3;g++)px(76+i*34+g*5,186,2,8,'#b8863a')}   // waffles
+  drawCake(76,204);drawCake(118,204);
+  px(280,150,160,44,'#8a5a30');px(284,154,152,36,'#a8743e');px(280,190,160,4,'rgba(0,0,0,0.12)');
+  for(let i=0;i<5;i++)drawBun(290+i*28,160,['#b06a3a','#f4f0e0','#e8a0b8'][i%3]);
+  for(let i=0;i<4;i++)drawLoaf(296+i*34,174,'#c9825a','#8a5a30');
+  px(300,220,140,36,'#8a5a30');px(304,224,132,28,'#a8743e');px(300,252,140,4,'rgba(0,0,0,0.12)');
+  for(let i=0;i<4;i++)drawCake(312+i*32,228);
 }
 function drawRoomArcade(){
   roomFrame('#2a3550','#3b5bd1');
