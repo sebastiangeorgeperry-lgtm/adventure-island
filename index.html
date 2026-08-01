@@ -17,7 +17,7 @@
 "use strict";
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
 ctx.imageSmoothingEnabled=false;
-const W=480,H=360,TS=16,MW=240,MH=180;
+const W=480,H=360,TS=16,MW=300,MH=230;
 
 // ---------- palette ----------
 const P={
@@ -206,6 +206,36 @@ const SOLID=t=>t===0||t===8||t===3||t===6||t===11||t===12||t===14||t===16||t===2
   // south house rows
   rect(86,167,90,169,16);rect(93,167,97,169,16);rect(100,167,104,169,16);
   rect(107,167,111,169,16);rect(114,167,118,169,16);rect(121,167,125,169,16);rect(128,167,132,169,16);
+  // ---- MIDTOWN: the city grows south into a metropolis ----
+  for(let y=170;y<=212;y++)for(let x=82;x<=150;x++){const t=T(x,y);if(t===0||t===8)setT(x,y,2)}
+  // midtown street grid
+  rect(84,170,148,172,10);rect(84,182,148,184,10);
+  rect(84,192,148,194,10);rect(84,202,148,204,10);
+  rect(84,170,85,204,10);rect(92,170,93,204,10);rect(100,170,101,204,10);
+  rect(124,170,125,204,10);rect(132,170,133,204,10);rect(140,170,141,204,10);rect(148,170,149,204,10);
+  // connect old south street down into midtown
+  rect(90,166,91,170,10);rect(104,166,105,172,10);rect(116,166,117,170,10);rect(124,166,125,170,10);
+  // midtown blocks (tall buildings)
+  rect(86,175,91,181,16);rect(102,175,107,181,16);rect(126,175,131,181,16);rect(134,175,139,181,16);rect(142,175,147,181,16);
+  rect(86,186,91,191,16);rect(126,186,131,191,16);rect(134,186,139,191,16);rect(142,186,147,191,16);
+  rect(86,196,91,201,16);rect(94,196,99,201,16);rect(126,196,131,201,16);rect(134,196,139,201,16);rect(142,196,147,201,16);
+  // THE TOWER — walk in, take the stairs, see the roof
+  bld(94,175,99,181,96,181);
+  // CITY PARK — a green heart between the avenues
+  for(let y=175;y<=201;y++)for(let x=102;x<=123;x++){
+    if(x>=102&&x<=107&&y<=181)continue; // tower block corner stays
+    setT(x,y,2);
+  }
+  rect(102,186,123,187,4);rect(112,175,113,201,4);            // park paths
+  for(let y=178;y<=183;y++)for(let x=115;x<=121;x++){         // park pond
+    const dx=(x-118)/3.5,dy=(y-180.5)/2.8;
+    if(dx*dx+dy*dy<1)setT(x,y,0);
+  }
+  [[104,178],[108,190],[104,196],[120,196],[122,190],[106,184],[118,192],[110,179]].forEach(([x,y])=>{if(T(x,y)===2)setT(x,y,3)});
+  [[103,182],[109,194],[121,188],[117,198],[105,190],[119,177]].forEach(([x,y])=>{if(T(x,y)===2)setT(x,y,7)});
+  // waterfront boardwalk along the south shore
+  rect(84,207,148,208,5);
+  for(let x=86;x<=146;x+=6)setT(x,209,5);
   route(114,96,114,154);        // bridge from Team Plaza into main street
   route(68,140,68,148);route(68,148,84,148); // west bridge: Castle Isle straight into the north street
 })();
@@ -380,12 +410,12 @@ let crowned=false;
 let tamed=false; // the beast of Beast Isle
 let coinCount=0;
 // kindness quests: 0=not started, 1=asked, 2=item in hand, 3=delivered
-const quests={mouse:0,bread:0,tea:0,ball:0,letter:0,grip:0,fish:0,flower:0,coinq:0,recipe:0,book:0,cheer:0};
+const quests={mouse:0,bread:0,tea:0,ball:0,letter:0,grip:0,fish:0,flower:0,coinq:0,recipe:0,book:0,cheer:0,
+  wcan:0,specs:0,swimtip:0,beanie:0,snack:0,flour:0,tip:0,story:0,pennant:0,seeds:0,luggage:0,coffee:0};
 let carryItem=null;
 const trophyCount=()=>{
   let n=quests.mouse>=2?1:0;
-  for(const k of ['bread','tea','ball','letter','grip','fish','flower','coinq','recipe','book','cheer'])
-    if(quests[k]>=3)n++;
+  for(const k in quests){if(k==='mouse')continue;if(quests[k]>=3)n++}
   return n;
 };
 function askQuest(key,askLines,yesLines,item){
@@ -397,6 +427,94 @@ function askQuest(key,askLines,yesLines,item){
 }
 function gainItem(key,item,lines){quests[key]=2;if(!carryItem)carryItem=item;saveGame();sfx.coin();say(lines)}
 function questDone(key,item,lines){quests[key]=3;if(carryItem===item)carryItem=null;saveGame();sfx.win();say(lines)}
+// twelve more kindness quests, table-driven: giver asks, source gives, giver thanks
+const KQ=[
+{k:'wcan',g:['w','Miya'],s:['r','grocery'],item:'can',
+ ask:["My flower boxes are thirsty","and my watering can rusted","clean through!","The grocery sells sturdy","ones. Fetch me one?"],
+ yes:["Bless you! The flowers say","thanks in advance!"],
+ remind:["The grocery's on the north","shop row, dear!"],
+ give:["A watering can for Miya's","flowers? On the house —","those boxes make the whole","street smile."],
+ thanks:["Look at them drink! The","street just got prettier.","The Trophy Master will hear","about you!"]},
+{k:'specs',g:['w','Ume'],s:['r','library'],item:'specs',
+ ask:["My reading glasses! Gone!","I've looked everywhere twice.","...which is hard, without","glasses. Could you look for","me? Try the library!"],
+ yes:["Thank you! The world is","very blurry and mysterious","right now."],
+ remind:["The library, dear — I always","doze off in there!"],
+ give:["These glasses were left on","the reading table last week.","Ume's? Of course they are.","Third time this month!"],
+ thanks:["AH! The world has edges","again! And you have the","face of a hero.","The Trophy Master must know!"]},
+{k:'swimtip',g:['w','Hiro'],s:['n','swim'],item:'note',
+ ask:["I want to swim the lagoon","someday... but I sink like","a sad rock.","Could you ask Marina for her","secret?"],
+ yes:["Really?! She's the fastest","fins alive! At the lagoon","east of the pagoda!"],
+ remind:["Marina trains at the lagoon","islet, past the pagoda!"],
+ give:["A beginner who wants my","secret? Easy:","'The water is your friend.","Stop fighting your friend.'","Written and signed!"],
+ thanks:["'Stop fighting your friend...'","THAT'S why I sink!","Lagoon, here I come. Slowly!","Tell the Trophy Master!"]},
+{k:'beanie',g:['w','Bolt'],s:['n','sled'],item:'beanie',
+ ask:["I rolled down Main Street","and my beanie kept going!","Straight into the sea...","Frost knits spares. Could","you ask him for one?"],
+ yes:["You're the best! He's up on","the snowy summit!"],
+ remind:["Frost is at the sled run,","top of the mountain!"],
+ give:["A rolled-away beanie? Ha!","Here — knitted this one","during a blizzard.","Double warm. Roll safe!"],
+ thanks:["WARM! And it matches my","lightning stripe!","You climbed a mountain for","my head. Legend. Trophy","Master's hearing this!"]},
+{k:'snack',g:['w','Taro'],s:['n','v2'],item:'snack',
+ ask:["I miss Harbor Town's fish","crackers something awful...","Hana makes them fresh every","morning. Bring me a bag?"],
+ yes:["You'd sail all that way?","My homesick heart thanks","you already!"],
+ remind:["Hana's stall is on the","harbor quay, west island!"],
+ give:["Fish crackers for homesick","Taro? Extra crispy batch,","coming up!","Tell him the harbor keeps","his old fishing spot free."],
+ thanks:["(crunch) ...Tastes like","home.","(crunch crunch)","You're a good one. Trophy","Master should know it!"]},
+{k:'flour',g:['r','bakery'],s:['r','grocery'],item:'flour',
+ ask:["Flour emergency! The morning","rush wiped me OUT.","The grocery next door has","sacks — could you run one","over? My oven's still hot!"],
+ yes:["Hurry! Warm ovens wait for","no one!"],
+ remind:["The grocery — literally next","door! Run!"],
+ give:["A flour run for the bakery?","Take our best sack!","Neighbors helping neighbors","is what this street's about."],
+ thanks:["The oven's saved! Tonight's","loaves are named after you.","The Trophy Master will smell","this kindness from the","plaza!"]},
+{k:'tip',g:['w','Suki'],s:['r','arcade'],item:'note',
+ ask:["The claw machine has beaten","me FORTY times.","Dex knows its secrets. Could","you ask him for a tip?"],
+ yes:["Thank you! I'm this close","to the purple plush!"],
+ remind:["Dex is in the arcade, right","on this street!"],
+ give:["A claw tip for Suki? Okay,","the truth:","'Aim one finger LEFT of the","prize. The claw drifts.'","Don't tell the machine."],
+ thanks:["One finger left... IT","DRIFTS?! Forty losses","explained!","You're getting the first","plush I win. And a word","with the Trophy Master!"]},
+{k:'story',g:['w','Nana'],s:['r','library'],item:'book',
+ ask:["I collect stories like some","folks collect coins.","Could you borrow me","something new from the","library? Anything with a","good ending."],
+ yes:["Wonderful! Surprise me!"],
+ remind:["The library's on the north","row — pick a good one!"],
+ give:["A story for Nana with a","good ending?","'The Lighthouse Cat.' The","ending is a nap. Perfect."],
+ thanks:["A cat, a lighthouse, and a","twenty-hour nap?","This is the best one yet.","The Trophy Master hears","about this TODAY."]},
+{k:'pennant',g:['w','Pipa'],s:['n','r1'],item:'pennant',
+ ask:["I named all four team","statues, but I've never","owned a team pennant!","Rex at the plaza hands them","out. Grab me one?"],
+ yes:["Ember red, if he asks!","...or any color. ALL colors!"],
+ remind:["Rex guards the Ember statue","at Team Plaza!"],
+ give:["A pennant for a true fan?","Take our brightest one!","Tell Pipa: Team Ember salutes","the statue-namer."],
+ thanks:["IT'S SO RED! I'm hanging it","over my bed!","Statue-namer, pennant-owner,","friend-haver. Best day.","Trophy Master time!"]},
+{k:'seeds',g:['n','v5'],s:['n','v4'],item:'seeds',
+ ask:["This park could use more","blossoms, don't you think?","Sana on the sakura isle","saves the best seeds.","Would you ask her for some?"],
+ yes:["The park will remember this","kindness in pink!"],
+ remind:["Sana keeps the seeds on the","sakura isle, out west!"],
+ give:["Seeds for the city park?","Oh, how WONDERFUL.","Take the whole pouch — and","tell Iris to plant them","where the children play."],
+ thanks:["Perfect. Come back in","spring — this lawn will be","a pink cloud.","The Trophy Master plants a","word for you too!"]},
+{k:'luggage',g:['w','Vera'],s:['n','fishing'],item:'case',
+ ask:["My suitcase fell off the","ferry! Everything I own,","bobbing in the bay...","The fisherman Moro nets","everything. Could you ask?"],
+ yes:["Oh thank you! It's brown,","with one silly sticker!"],
+ remind:["Moro's on the harbor quay —","he nets everything!"],
+ give:["A brown case with a silly","sticker? Netted it this","morning!","Dry as a bone inside. Good","knots on that one."],
+ thanks:["My case! My socks! My","SILLY STICKER!","You saved my whole trip.","The Trophy Master will hear","this from the rooftops!"]},
+{k:'coffee',g:['w','Omar'],s:['r','bakery'],item:'coffee',
+ ask:["Tower deadline. Forty floors","of paperwork. Zero coffee.","The bakery brews the good","stuff... please. PLEASE."],
+ yes:["You're saving an entire","office. We'll never forget."],
+ remind:["The bakery! North shop row!","(He looks very tired.)"],
+ give:["A big warm cup for the","tower folks? Extra strong,","double kind.","Careful — it's rocket fuel."],
+ thanks:["(sip)","...","I can see THROUGH TIME.","The whole office thanks you.","So will the Trophy Master!"]}
+];
+function kqTalk(t,id){
+  for(const q of KQ){
+    const st=quests[q.k];
+    if(q.g[0]===t&&q.g[1]===id){
+      if(st===0){askQuest(q.k,q.ask,q.yes);return true}
+      if(st===1){say(q.remind);return true}
+      if(st===2){questDone(q.k,q.item,q.thanks);return true}
+      continue;
+    }
+    if(q.s[0]===t&&q.s[1]===id&&st===1){gainItem(q.k,q.item,q.give);return true}
+  }
+  return false;
+}
 // ---------- teams ----------
 let team=null;
 const teams=[
@@ -488,7 +606,10 @@ const npcs=[
   {id:'r3',recruit:'bloom',name:'Bud', x:116,y:94,color:'#2f9e44',
    style:{skin:'#8a5a3a',hs:'curly',hair:'#1f5c14',hairD:'#143d0d',top:'#2f9e44',straps:'#1f5c14',flower:true,pants:'#4a3a2a'}},
   {id:'r4',recruit:'bolt', name:'Zap', x:124,y:94,color:'#f1c40f',
-   style:{skin:'#e8b88a',hs:'spiky',hair:'#f1c40f',hairD:'#d9ac0e',top:'#f1c40f',stripe:'#1a1c2c',glasses:true,pants:'#1a1c2c'}}
+   style:{skin:'#e8b88a',hs:'spiky',hair:'#f1c40f',hairD:'#d9ac0e',top:'#f1c40f',stripe:'#1a1c2c',glasses:true,pants:'#1a1c2c'}},
+  {id:'v5',villager:true,name:'Iris',x:112,y:186,color:'#7fbf7f',
+   style:{skin:'#e8c8a8',hs:'long',hair:'#7fbf7f',hairD:'#5f9f5f',top:'#e8e0c8',apron:'#7fbf7f',flower:true,blush:true},
+   lines:["Welcome to the city park!","Grass between skyscrapers —","that's the whole secret to","a happy city."]}
 ];
 
 // ---------- dialog ----------
@@ -1216,6 +1337,31 @@ function drawVending(sx,sy){
   px(sx+2,sy+8,8,6,'#1a1c2c');px(sx+12,sy+6,4,8,'#8f2a22');
   if(frame%80<40)px(sx+13,sy-9,2,2,'#7fffd4');
 }
+function drawSkyscraper(sx,sy,c){
+  // a tall tower face rising above its block (96 wide, reaches ~64px above)
+  const lit=nightAmount()>0.35;
+  px(sx-2,sy-64,100,64,c);
+  px(sx-2,sy-64,100,4,'rgba(255,255,255,0.2)');
+  px(sx-6,sy-68,108,6,'rgba(0,0,0,0.25)');
+  // rooftop water tank (very downtown)
+  px(sx+66,sy-84,20,16,'#6b4423');px(sx+62,sy-86,28,4,'#54341a');px(sx+72,sy-92,8,6,'#54341a');
+  // window grid up the whole face
+  for(let r=0;r<7;r++)for(let col=0;col<5;col++){
+    const on=lit&&((r*5+col+((sx/16)|0))%3!==0);
+    px(sx+4+col*19,sy-58+r*15,12,9,on?'#ffe9a0':'#bfd8e8');
+    px(sx+4+col*19,sy-58+r*15,12,2,on?'#e0c060':'#8fb8d0');
+  }
+  px(sx+34,sy+34,28,10,'#f4f0e0');px(sx+38,sy+37,20,4,c); // entrance sign
+}
+function drawFountain(sx,sy){
+  ctx.fillStyle='#9aa0ad';ctx.beginPath();ctx.ellipse(sx,sy,26,14,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#5fc9e8';ctx.beginPath();ctx.ellipse(sx,sy,20,10,0,0,Math.PI*2);ctx.fill();
+  px(sx-3,sy-14,6,14,'#8a92a4');
+  const h=6+Math.sin(frame/10)*3;
+  px(sx-1,sy-14-h,2,h,'#bfe4f8');
+  px(sx-6,sy-12,2,3,'rgba(191,228,248,0.8)');px(sx+4,sy-13,2,3,'rgba(191,228,248,0.8)');
+  if(frame%14<7){px(sx-10,sy-2,2,2,'#e8f4ff');px(sx+9,sy+1,2,2,'#e8f4ff')}
+}
 function drawTrophyHouse(sx,sy){
   // the shrine of kindness: tiered teal roofs, gold trim, a great cup on top
   // sits over the 7x5 building block (112x80 px)
@@ -1304,6 +1450,27 @@ const decor=[
   {f:drawLantern,x:88.4*16,y:148.6*16},{f:drawLantern,x:104.4*16,y:148.6*16},
   {f:drawLantern,x:120.4*16,y:148.6*16},{f:drawLantern,x:128.4*16,y:165.5*16},
   {f:drawLantern,x:124.4*16,y:152*16},{f:drawLantern,x:84.4*16,y:161*16},
+  // MIDTOWN skyline: towers with rooftop tanks
+  {f:drawSkyscraper,x:86*16,y:175*16,c:'#5a6a8a'},{f:drawSkyscraper,x:102*16,y:175*16,c:'#6e5a8a'},
+  {f:drawSkyscraper,x:126*16,y:175*16,c:'#4a5a74'},{f:drawSkyscraper,x:134*16,y:175*16,c:'#7a6a5a'},
+  {f:drawSkyscraper,x:142*16,y:175*16,c:'#5a7a74'},
+  {f:drawSkyscraper,x:86*16,y:186*16,c:'#6a5a74'},{f:drawSkyscraper,x:126*16,y:186*16,c:'#5a6a8a'},
+  {f:drawSkyscraper,x:134*16,y:186*16,c:'#4a6a5a'},{f:drawSkyscraper,x:142*16,y:186*16,c:'#7a5a5a'},
+  {f:drawSkyscraper,x:86*16,y:196*16,c:'#5a5a7a'},{f:drawSkyscraper,x:94*16,y:196*16,c:'#6e6a4a'},
+  {f:drawSkyscraper,x:126*16,y:196*16,c:'#4a5a74'},{f:drawSkyscraper,x:134*16,y:196*16,c:'#6a5a8a'},
+  {f:drawSkyscraper,x:142*16,y:196*16,c:'#5a6a6a'},
+  // Sky Tower entrance dressing
+  {f:drawShop,x:94*16,y:175*16,c:'#3d4a66'},
+  // the park: fountain, benches, lights
+  {f:drawFountain,x:112.5*16,y:189*16},
+  {f:drawBench,x:104*16,y:187.6*16},{f:drawBench,x:118*16,y:187.6*16},
+  {f:drawLantern,x:112.9*16,y:177*16},{f:drawLantern,x:104.4*16,y:198*16},{f:drawLantern,x:120.4*16,y:198*16},
+  // midtown street lights + boardwalk lights
+  {f:drawLantern,x:88.4*16,y:173*16},{f:drawLantern,x:130.4*16,y:173*16},
+  {f:drawLantern,x:96.4*16,y:183*16},{f:drawLantern,x:138.4*16,y:183*16},
+  {f:drawLantern,x:88.4*16,y:193*16},{f:drawLantern,x:130.4*16,y:203*16},
+  {f:drawLantern,x:96.4*16,y:206.5*16},{f:drawLantern,x:120.4*16,y:206.5*16},{f:drawLantern,x:140.4*16,y:206.5*16},
+  {f:drawVending,x:126.2*16,y:172.8*16},{f:drawStall,x:106*16,y:201.2*16},
   // stone lanterns lining the main roads
   {f:drawLantern,x:118.4*16,y:70*16},{f:drawLantern,x:122.4*16,y:78*16},
   {f:drawLantern,x:118.4*16,y:52*16},{f:drawLantern,x:100.4*16,y:89*16},
@@ -1341,7 +1508,11 @@ const walkers=[
   {name:'Miya', sx2:114,sy2:148,style:{skin:'#f5d5a8',hs:'bowl',hair:'#3bd1c4',hairD:'#2a9a90',top:'#f4f4f4',jacket:'#3bd1c4',earring:true},lines:["I do the flower boxes on","the north street.","Water them with kindness!"]},
   {name:'Gou',  sx2:128,sy2:148,style:{skin:'#c98f5e',hs:'bald',hair:'#3d2b1e',top:'#c0392b',apron:'#54341a',beard:'#3d2b1e'},lines:["Retired ramen chef.","The new chef? My student.","Tell them the broth needs","more THUNDER."]},
   {name:'Pipa', sx2:128,sy2:157,style:{skin:'#e8b88a',hs:'pony',hair:'#e8923a',hairD:'#c96a1e',top:'#7fbf7f',stripe:'#f4f4f4',freckles:true,blush:true},lines:["I named all four team","statues. Don't ask which","name goes with which."]},
-  {name:'Sho',  sx2:120,sy2:157,style:{skin:'#f5e0c8',hs:'hood',hair:'#3d4a66',top:'#3d4a66',jacket:'#2a3550',pants:'#1a1c2c'},lines:["...the beast isle glows","at night.","I've seen it. Twice."]}
+  {name:'Sho',  sx2:120,sy2:157,style:{skin:'#f5e0c8',hs:'hood',hair:'#3d4a66',top:'#3d4a66',jacket:'#2a3550',pants:'#1a1c2c'},lines:["...the beast isle glows","at night.","I've seen it. Twice."]},
+  {name:'Vera', sx2:96, sy2:171,style:{skin:'#e8b88a',hs:'long',hair:'#3d2b1e',hairD:'#2a1c10',top:'#e8734a',jacket:'#c95a35',earring:true,glasses:true},lines:["First time visiting the big","city!","Everything is so TALL."]},
+  {name:'Omar', sx2:128,sy2:183,style:{skin:'#8a5a3a',hs:'flat',hair:'#1a1c2c',top:'#f4f4f4',jacket:'#3d4a66',belt:'#1a1c2c',glasses:true,pants:'#3d4a66'},lines:["Tower job. Big deadlines.","Small breaks.","At least the view's nice."]},
+  {name:'Lulu', sx2:110,sy2:203,style:{skin:'#f5d5a8',hs:'bun',hair:'#e85d75',hairD:'#c04a5a',top:'#7fe3dc',stripe:'#f4f4f4',blush:true},lines:["The boardwalk at sunset is","the best spot in the whole","city. Don't tell everyone."]},
+  {name:'Chip', sx2:138,sy2:193,style:{skin:'#c98f5e',hs:'cap',hair:'#2f9e44',hairD:'#1f7a30',top:'#e8c93e',straps:'#8a5a30',freckles:true},lines:["I skate the midtown avenues","every morning.","Smoothest stone on the","island!"]}
 ].map((w,i)=>({...w,
   x:w.sx2*TS+8,y:w.sy2*TS+8,
   dir:'down',t:i*17,pause:0,blocked:false}));
@@ -1434,7 +1605,73 @@ const BOOKS=[
  ['Joining',['She ran WITH the gusts,','resting when they rested,','flying when they flew.']],
  ['The Third Race',['Nobody won the third race.','Nobody needed to.']],
  ['Wind-Sister',['Fishermen say a girl runs the','shore at dawn','with sand spinning joyfully','around her.']],
- ['Still Racing',['If your hat ever vanishes on','the beach, don\'t worry.','Pua will bring it back.','THE END']]]}
+ ['Still Racing',['If your hat ever vanishes on','the beach, don\'t worry.','Pua will bring it back.','THE END']]]},
+{title:'The Torii at the Bottom of the Sea',color:'#e8734a',chapters:[
+ ['The Diver',['Old diver Kame knew every','reef by name.','One glowed red on moonless','nights.']],
+ ['The Gate',['Down deep stood a torii gate,','perfect and scarlet,','as if the sea had built a','doorway.']],
+ ['The Question',['Doorways lead somewhere.','Kame wondered where for','forty years.']],
+ ['The Dare',['On his last dive, he finally','swam through it.']],
+ ['Through',['The water turned warm and','bright as morning.','Fish sang. Truly. Sang.']],
+ ['The Garden',['Below lay a garden of sea','flowers arranged in rows','someone tended.']],
+ ['The Gardener',['A turtle older than islands','pruned the coral.','"Took you long enough,"','she said.']],
+ ['The Gift',['She gave him one glowing','seed.','"Plant it where people','forget to look up."']],
+ ['The Planting',['Kame planted it at the plaza.','You know the torii standing','there today?']],
+ ['Look Up',['That is not wood.','That is a sea-flower, still','growing. THE END']]]},
+{title:'Coins of the Flower Patch',color:'#f5e04b',chapters:[
+ ['The Rumor',['Every islander hears it','young:','"Coins hide in the flowers."']],
+ ['The Digger',['Bram dug up every patch he','found.','He got dirt, worms, and one','angry bee.']],
+ ['The Planter',['His sister Lark planted','flowers instead of digging','them.']],
+ ['Nothing',['For a year, her garden gave','her no coins at all.','Only colors and bees.']],
+ ['The Visitors',['Then travelers came to see','the colors.','They bought seeds. They left','happy.']],
+ ['The Jar',['Lark\'s coin jar filled up','slow and honest.']],
+ ['Brothers',['Bram counted her jar twice','and sat down hard.','"The coins WERE in the','flowers," he said.']],
+ ['Together',['They planted the whole hill','after that.']],
+ ['The Patch Today',['Walk any flower patch','slowly.','Something always shines.']],
+ ['The Secret',['Coins grow where care is','planted.','That\'s the whole treasure','map. THE END']]]},
+{title:'The Sled That Would Not Stop',color:'#7fc7e8',chapters:[
+ ['Built Fast',['Juno built her sled from','wind-fallen wood and one','borrowed prayer.']],
+ ['The First Run',['It went fast.','Then faster.','Then it did not stop.']],
+ ['Past the Village',['She waved at the village.','The village blurred.']],
+ ['Across the Ice',['The frozen lake rang like a','bell beneath her.']],
+ ['The Jump',['The sea cliff arrived.','Juno closed her eyes and','leaned back.']],
+ ['Flight',['The sled skipped off a wave.','Then another.','Sledding became sailing.']],
+ ['The Island Tour',['She passed the harbor,','the lagoon, the dark isle.','The beast waved.']],
+ ['The Beach',['Warm sand finally did what','snow could not.','The sled stopped. Gently.']],
+ ['The Walk Home',['It took Juno three days to','walk back up.','She grinned the whole way.']],
+ ['Museum Piece',['The sled hangs in the sled','hut now.','Nobody dares wax it.','THE END']]]},
+{title:'Granny\'s Hundred Teapots',color:'#b05a8a',chapters:[
+ ['Ninety-Nine',['Granny Umi owned ninety-nine','teapots.','Each had a story. Most had','chips.']],
+ ['The First',['Pot one: her mother\'s,','carried across the sea in a','basket of socks.']],
+ ['The Loud One',['Pot forty whistled so hard','it once scared off a storm.']],
+ ['The Trade',['Pot sixty-two cost her a','dance at the festival of','\'62.','Worth it.']],
+ ['Empty Shelf',['One shelf spot stayed empty','for fifty years.']],
+ ['Why',['"The hundredth pot," she','said, "must be a gift.','Gifts cannot be hunted."']],
+ ['The Child',['A small visitor heard the','story and went home','thinking.']],
+ ['Clay',['The child dug clay, shaped a','lumpy pot, and fired it in','a bread oven.']],
+ ['One Hundred',['It leaked. It leaned.','Granny put it in the center','of everything.']],
+ ['The Best Pot',['"Perfect pots hold tea," she','says.','"Lumpy ones hold love."','THE END']]]},
+{title:'The Friendly Ghost of Cabinet Nine',color:'#8e44ad',chapters:[
+ ['High Score',['Cabinet nine at the arcade','always showed the same top','score: GUS.']],
+ ['Nobody',['Nobody named Gus lived on','the island.','Nobody ever had.']],
+ ['Midnight Games',['At midnight the cabinet','played itself —','perfect games, no player.']],
+ ['The Stakeout',['Dex hid behind the claw','machine with cold noodles','and waited.']],
+ ['The Glow',['At twelve, a soft blue light','settled at the controls.','It played beautifully.']],
+ ['Hello',['"Nice score," Dex whispered.','The light flickered,','embarrassed.']],
+ ['Gus',['Gus had loved games long','ago, when the island was','young and lonely.']],
+ ['Two Player',['Dex switched the cabinet to','two-player mode and sat','down.']],
+ ['The Rematch',['They played until sunrise.','Dex lost forty times and','laughed forty times.']],
+ ['House Rules',['Cabinet nine is never','unplugged.','Beat GUS if you can. Say','hi either way. THE END']]]},
+{title:'Letters to the Moon',color:'#5aa0c5',chapters:[
+ ['The Mailbox',['A mailbox stands on the','summit, pointed at the sky.','No street. No number.']],
+ ['The First Letter',['A lighthouse keeper built','it, missing someone far','away.','He wrote to the moon','instead.']],
+ ['Replies',['Moonlight fell on his desk','each night.','He decided that counted.']],
+ ['The Habit Spreads',['Soon the whole island wrote:','wishes, sorries, brags,','recipes.']],
+ ['The Rule',['You cannot mail a letter for','yourself.','Moon rules. Everyone knows.']],
+ ['The Snowed-In Winter',['One winter the path iced','over.','The mailbox stood empty and','the island felt heavier.']],
+ ['The Climber',['A climber cut steps in the','ice so the letters could','get through.']],
+ ['Full Again',['The box overflowed by','spring.','The island felt light again.']],
+ ['Science',['Do the letters reach the','moon?','The moon has never once','complained.']],
+ ['Your Turn',['The mailbox is still up','there, past the sled run.','Bring a pencil. THE END']]]}
 ];
 let bookUI=null; // {mode:'pick'|'read', sel, ch}
 function updateBooks(){
@@ -1442,8 +1679,9 @@ function updateBooks(){
   if(b.mode==='pick'){
     if(pressed('ArrowLeft')||pressed('a')||pressed('A')){b.sel=(b.sel+BOOKS.length-1)%BOOKS.length;sfx.cursor()}
     if(pressed('ArrowRight')||pressed('d')||pressed('D')){b.sel=(b.sel+1)%BOOKS.length;sfx.cursor()}
+    if(pressed('ArrowUp')||pressed('w')||pressed('W')||pressed('ArrowDown')||pressed('s')||pressed('S')){b.sel=(b.sel+6)%BOOKS.length;sfx.cursor()}
     if(action()){b.mode='read';b.ch=0;sfx.pop();return}
-    if(pressed('ArrowDown')||pressed('s')||pressed('S')||pressed('m')||pressed('M')){bookUI=null;state='inside';sfx.blip()}
+    if(pressed('m')||pressed('M')){bookUI=null;state='inside';sfx.blip()}
   }else{
     if(pressed('ArrowRight')||pressed('d')||pressed('D')){if(b.ch<9){b.ch++;whoosh(0.08,0.08,800,3000)}}
     if(pressed('ArrowLeft')||pressed('a')||pressed('A')){if(b.ch>0){b.ch--;whoosh(0.08,0.08,800,3000)}}
@@ -1456,21 +1694,24 @@ function drawBooks(){
   px(0,0,W,H,'rgba(16,19,34,0.82)');
   const b=bookUI;
   if(b.mode==='pick'){
-    text('THE ISLAND SHELF',W/2,26,P.gold,14,'center');
-    px(60,60,W-120,180,'#6b4423');px(66,66,W-132,168,'#54341a');
-    px(60,232,W-120,10,'#8a5a30');
+    text('THE ISLAND SHELF',W/2,20,P.gold,14,'center');
+    px(60,44,W-120,206,'#6b4423');px(66,50,W-132,194,'#54341a');
+    px(60,152,W-120,8,'#8a5a30');px(60,242,W-120,10,'#8a5a30');
     for(let i=0;i<BOOKS.length;i++){
-      const bx=88+i*54,sel=i===b.sel;
-      const by=sel?86:96,bh=sel?130:114;
+      const row=i<6?0:1,col=i%6;
+      const sel=i===b.sel;
+      const bx=88+col*54;
+      const by=(row===0?62:154)+(sel?-6:0);
+      const bh=sel?92:80;
       px(bx-3,by-3,42,bh+6,sel?'#f5e04b':'rgba(0,0,0,0.3)');
       px(bx,by,36,bh,BOOKS[i].color);
-      px(bx,by,36,6,'rgba(255,255,255,0.25)');
-      px(bx+4,by+14,28,3,'#f4f0e0');px(bx+4,by+22,28,3,'#f4f0e0');
-      px(bx+8,by+bh-18,20,10,'#e8c93e');
+      px(bx,by,36,5,'rgba(255,255,255,0.25)');
+      px(bx+4,by+12,28,3,'#f4f0e0');px(bx+4,by+19,28,3,'#f4f0e0');
+      px(bx+8,by+bh-14,20,8,'#e8c93e');
     }
-    text(BOOKS[b.sel].title,W/2,258,P.white,11,'center');
-    text('10 chapters',W/2,276,'rgba(244,244,244,0.7)',9,'center');
-    text('◄ ► choose · SPACE open · ▼ back',W/2,H-30,'rgba(244,244,244,0.8)',9,'center');
+    text(BOOKS[b.sel].title,W/2,262,P.white,10,'center');
+    text('10 chapters',W/2,280,'rgba(244,244,244,0.7)',8,'center');
+    text('◄ ► ▲ ▼-hold choose · SPACE open · M back',W/2,H-24,'rgba(244,244,244,0.8)',8,'center');
   }else{
     const bk=BOOKS[b.sel],ch=bk.chapters[b.ch];
     px(50,34,W-100,H-78,'#f4ecd8');
@@ -1491,8 +1732,11 @@ const DOORS=[
   {x:94,y:154,room:'library',ex:0,ey:1},{x:102,y:154,room:'grocery',ex:0,ey:1},
   {x:110,y:154,room:'bakery',ex:0,ey:1},{x:96,y:159,room:'arcade',ex:0,ey:-1},
   {x:104,y:159,room:'ramen',ex:0,ey:-1},{x:112,y:159,room:'house',ex:0,ey:-1},
-  {x:120,y:83,room:'trophy',ex:0,ey:1}
+  {x:120,y:83,room:'trophy',ex:0,ey:1},
+  {x:96,y:181,room:'tower',ex:0,ey:1}
 ];
+let floorIdx=0,stairCd=0;
+const curFloor=()=>interior&&interior.floors?interior.floors[floorIdx]:interior;
 // the plaza mouse — small, squeaky, surprisingly wise
 function drawMouse(sx,sy){
   const hop=Math.sin(frame/16)>0.6?-1:0;
@@ -1880,29 +2124,130 @@ function drawRoomTrophy(){
   // center aisle carpet
   px(214,68,52,H-108,'#8a6f3d');px(220,68,40,H-108,'#a8894a');
   // the Trophy Master's spot is at the top of the aisle
-  // two wings of red display cases — they fill as kindness spreads
+  // two wings of red display cases — 24 in all, filling as kindness spreads
   const earned=trophyCount();
   let caseN=0;
-  for(const wing of [46,286]){
-    for(let r=0;r<3;r++)for(let c=0;c<2;c++){
-      const cx2=wing+c*76,cy2=96+r*62;
-      px(cx2-2,cy2+46,64,5,'rgba(0,0,0,0.2)');
-      px(cx2,cy2,60,44,'#a83226');px(cx2,cy2,60,4,'#c0453a');
-      px(cx2+5,cy2+6,50,26,'#1e2438');
-      px(cx2+7,cy2+8,14,6,'rgba(255,255,255,0.10)');
-      px(cx2+5,cy2+34,50,7,'#8f2a22');px(cx2+22,cy2+36,16,4,'#f5e04b');
+  for(const wing of [40,286]){
+    for(let r=0;r<4;r++)for(let c=0;c<3;c++){
+      const cx2=wing+c*52,cy2=92+r*46;
+      px(cx2-1,cy2+32,42,4,'rgba(0,0,0,0.2)');
+      px(cx2,cy2,40,31,'#a83226');px(cx2,cy2,40,3,'#c0453a');
+      px(cx2+4,cy2+5,32,17,'#1e2438');
+      px(cx2+5,cy2+6,9,4,'rgba(255,255,255,0.10)');
+      px(cx2+4,cy2+23,32,5,'#8f2a22');px(cx2+14,cy2+24,12,3,'#f5e04b');
       if(caseN<earned){
-        drawTrophyCup(cx2+24,cy2+14,false);
-        if((frame+caseN*13)%50<25)px(cx2+20,cy2+10,2,2,'#fff8c0');
+        px(cx2+16,cy2+15,8,3,'#d9ac0e');px(cx2+17,cy2+9,6,6,'#f5e04b');
+        px(cx2+15,cy2+9,2,3,'#f5e04b');px(cx2+23,cy2+9,2,3,'#f5e04b');
+        if((frame+caseN*13)%50<25)px(cx2+14,cy2+7,2,2,'#fff8c0');
       }
       caseN++;
     }
   }
   // the mouse waits by the aisle once you've agreed to help
   if(quests.mouse>=1)drawMouse(250,130);
-  text(earned+' / 12 kindness trophies',W/2,H-52,'#e8d5a0',9,'center');
+  text(earned+' / 24 kindness trophies',W/2,H-52,'#e8d5a0',9,'center');
+}
+// ---- the Sky Tower: lobby, offices, and a rooftop above the city ----
+function drawStairsUpIcon(x,y){
+  for(let i=0;i<4;i++)px(x+i*6,y+18-i*6,20-i*5,4,'#b5bbc8');
+  text('▲',x+24,y-6,'#f5e04b',10,'center');
+}
+function drawStairsDownIcon(x,y){
+  for(let i=0;i<4;i++)px(x+i*5,y+i*6,20-i*5,4,'#7a808d');
+  text('▼',x+24,y+26,'#f5e04b',10,'center');
+}
+function drawTowerLobby(){
+  roomFrame('#5a6a8a','#c5cbd8');
+  for(let y2=0;y2<8;y2++)for(let x2=0;x2<14;x2++)if((x2+y2)%2)px(20+x2*32,76+y2*30,32,30,'#d2d8e4');
+  // reception desk
+  px(150,84,180,36,'#3d4a66');px(150,84,180,6,'#5a7298');px(150,116,180,4,'rgba(0,0,0,0.15)');
+  px(170,72,20,12,'#3d3d45');px(172,74,16,7,'#7fffd4');
+  px(290,74,14,10,'#e8e0c8');
+  // elevator doors (out of order, of course)
+  px(60,60,60,60,'#9aa0ad');px(64,64,24,52,'#b5bbc8');px(92,64,24,52,'#b5bbc8');px(88,64,4,52,'#7a808d');
+  px(66,50,48,8,'#3d4a66');px(84,52,12,4,'#e85d75');
+  text('out of order...',90,126,'#8a4a3a',7,'center');
+  // plants & bench
+  px(380,70,16,12,'#8a4a3a');px(382,58,4,13,'#5f9f5f');px(388,54,4,17,'#7fbf7f');px(378,62,4,9,'#5f9f5f');
+  drawBench(200,180);drawBench(280,180);
+  ctx.fillStyle='#a83226';ctx.beginPath();ctx.ellipse(240,200,70,26,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#c0453a';ctx.beginPath();ctx.ellipse(240,200,50,17,0,0,Math.PI*2);ctx.fill();
+  // stairs up (right side)
+  px(392,140,60,110,'#8a92a4');px(396,144,52,102,'#a5adbd');
+  drawStairsUpIcon(404,180);
+  text('SKY TOWER — LOBBY',W/2,44,'#e8e0c8',10,'center');
+}
+function drawTowerOffice(){
+  roomFrame('#6a7a9a','#b0a890');
+  for(let i=0;i<10;i++)px(20,84+i*24,W-40,1,'#9a9278');
+  // windows with sky
+  for(let i=0;i<4;i++){px(40+i*110,20,80,44,'#8fd3f0');px(40+i*110,52,80,12,'#aee2f8');
+    px(48+i*110,28,20,8,'#f4f4f4');px(80+i*110,24,24,10,'#ffffff')}
+  // cubicles
+  for(const [dx,dy] of [[60,110],[180,110],[60,190],[180,190]]){
+    px(dx,dy,90,40,'#8a92a4');px(dx+4,dy+4,82,32,'#a5adbd');
+    px(dx+10,dy+8,22,16,'#1e2438');px(dx+12,dy+10,18,10,'#7fffd4');
+    px(dx+40,dy+12,20,12,'#f4f0e0');px(dx+42,dy+16,16,1,'#8a8a9a');px(dx+42,dy+19,16,1,'#8a8a9a');
+    px(dx+66,dy+10,10,12,'#e8e0c8');
+  }
+  // the coffee machine (legendary)
+  px(320,90,30,36,'#3d3d45');px(324,96,22,12,'#e85d75');px(328,110,14,8,'#1a1c2c');
+  drawSteam(334,88);
+  // stairs both ways
+  px(392,140,60,110,'#8a92a4');px(396,144,52,102,'#a5adbd');
+  drawStairsUpIcon(404,160);drawStairsDownIcon(404,210);
+  text('FLOOR 22 — OFFICES',W/2,44,'#f4f4f4',10,'center');
+}
+function drawTowerRoof(){
+  // open sky!
+  px(0,0,W,H,'#8fd3f0');
+  px(0,0,W,60,'#a8e0f8');
+  for(let i=0;i<5;i++){const cxx=(i*120+((frame/6)|0))%(W+80)-40;
+    ctx.fillStyle='rgba(255,255,255,0.9)';ctx.beginPath();ctx.ellipse(cxx,34+i*8,30,12,0,0,Math.PI*2);ctx.fill()}
+  // skyline of the city below
+  for(let i=0;i<9;i++){
+    const bx=10+i*54,bh=60+((i*37)%70);
+    px(bx,150-bh+90,44,bh,'#5a6a8a');px(bx,150-bh+90,44,4,'#6e7ea0');
+    for(let wy=0;wy<Math.floor(bh/14);wy++)for(let wx=0;wx<3;wx++)
+      px(bx+6+wx*13,158-bh+90+wy*14,7,8,(i+wx+wy)%3?'#8fd3f0':'#ffe9a0');
+  }
+  // the sea beyond
+  px(0,236,W,40,'#3978a8');px(0,234,W,4,'#4f95c9');
+  // rooftop terrace
+  px(0,262,W,H-262,'#8a92a4');
+  for(let i=0;i<15;i++)px(i*32,262,1,H-262,'#7a828f');
+  px(0,258,W,6,'#b5bbc8');                       // railing
+  for(let i=0;i<24;i++)px(4+i*20,252,3,10,'#b5bbc8');
+  // garden boxes & bench
+  px(40,280,70,20,'#8a5a30');px(44,276,62,8,'#5f9f5f');px(50,272,10,8,'#e85d75');px(80,272,10,8,'#f5e04b');
+  px(340,280,70,20,'#8a5a30');px(344,276,62,8,'#5f9f5f');px(352,272,10,8,'#f5a8c0');
+  drawBench(210,290);
+  // stairs down
+  px(392,286,60,50,'#6a7286');drawStairsDownIcon(404,292);
+  text('THE ROOFTOP',W/2,140,'#ffffff',12,'center');
+  text('the whole island, from up here',W/2,160,'rgba(255,255,255,0.85)',8,'center');
 }
 const INTERIORS={
+  tower:{floors:[
+    {draw:drawTowerLobby,
+     npc:{x:240,y:70,color:'#5a7298',
+      style:{skin:'#f5d5a8',hs:'bun',hair:'#3d2b1e',top:'#f4f4f4',jacket:'#3d4a66',earring:true,pants:'#3d4a66'},
+      lines:["Welcome to Sky Tower!","Tallest building on the","island — 22 floors!","...the elevator's out, but","the stairs only SEEM","endless. Enjoy!"]},
+     blocks:[[150,84,180,36],[60,60,60,60],[376,54,24,30],[196,174,38,14],[276,174,38,14]],
+     up:{x1:392,y1:150,x2:456,y2:250}},
+    {draw:drawTowerOffice,
+     npc:{x:240,y:150,color:'#3d4a66',
+      style:{skin:'#e8b88a',hs:'curly',hair:'#8a4a3a',glasses:true,top:'#f4f4f4',jacket:'#6a7a9a',pants:'#3d4a66'},
+      lines:["Floor 22. Paperwork as far","as the eye can see.","The rooftop's one more","flight up — best view on","the island. Worth every","stair."]},
+     blocks:[[60,110,90,40],[180,110,90,40],[60,190,90,40],[180,190,90,40],[320,90,30,36]],
+     up:{x1:392,y1:140,x2:456,y2:190},down:{x1:392,y1:196,x2:456,y2:250}},
+    {draw:drawTowerRoof,
+     npc:{x:150,y:300,color:'#7fe3dc',
+      style:{skin:'#c98f5e',hs:'long',hair:'#7fe3dc',hairD:'#4fb8b0',top:'#f5a8c0',flower:true,blush:true,pants:'#f4f4f4'},
+      lines:["Shhh. Look.","The whole island — snow to","sakura to sea.","I come up here whenever the","city feels too loud.","Now it's your spot too."]},
+     blocks:[[40,276,70,24],[340,276,70,24],[204,286,38,14],[0,0,W,262]],
+     down:{x1:392,y1:286,x2:456,y2:336}}
+  ]},
   trophy:{draw:drawRoomTrophy,npc:{x:240,y:70,color:'#8e44ad',
     style:{skin:'#e8c8a8',hs:'bald',hair:'#8a8a9a',top:'#f5e04b',jacket:'#8e44ad',beard:'#d5dae2',glasses:true,pants:'#4a2a5a'},
     onTalk:()=>{
@@ -1915,10 +2260,11 @@ const INTERIORS={
       }
     },
     lines:["..."]},
-    blocks:[[46,96,136,44],[46,158,136,44],[46,220,136,44],[286,96,136,44],[286,158,136,44],[286,220,136,44],[24,42,432,22],[210,60,60,30]]},
+    blocks:[[40,92,144,170],[286,92,144,170],[24,42,432,22],[210,60,60,30]]},
   library:{draw:drawRoomLibrary,npc:{x:80,y:70,color:'#8a7a5a',
     style:{skin:'#e8c8a8',hs:'bun',hair:'#b0b8c5',hairD:'#8a8a9a',top:'#6a5a7a',jacket:'#4a3a5a',glasses:true,pants:'#3a3a45'},
     onTalk:()=>{
+      if(kqTalk('r','library'))return;
       if(quests.flower===2){questDone('flower','flower',
         ["Sakura blossoms... from the","isle itself.","(She places the sprig by the","reading corner and smiles for","the first time in weeks.)","Thank you. The Trophy Master","will hear of this."]);return}
       if(quests.book===1){gainItem('book','book',
@@ -1934,6 +2280,7 @@ const INTERIORS={
     blocks:[[34,86,120,42],[180,60,86,60],[276,60,86,60],[372,60,80,60],[180,150,86,60],[276,150,86,60],[372,150,80,60],[150,238,44,34]]},
   grocery:{draw:drawRoomGrocery,npc:{x:400,y:70,color:'#2f9e44',
     style:{skin:'#c98f5e',hs:'cap',hair:'#2f9e44',hairD:'#1f7a30',top:'#f4f4f4',apron:'#2f9e44',freckles:true,pants:'#6a5a40'},
+    onTalk:()=>{if(kqTalk('r','grocery'))return;say(INTERIORS.grocery.npc.lines)},
     lines:["Fresh greens, island fruit,","and frozen fish!","Everything's picked from the","rural isles — support your","local farmers!"]},
     extras:[{x:170,y:200,color:'#c9825a',lines:["Beach-isle mushrooms are on","aisle two. Top shelf stuff!"]},
             {x:290,y:120,color:'#6ab04c',lines:["I only came in for milk.","My basket disagrees."]}],
@@ -1943,8 +2290,9 @@ const INTERIORS={
     onTalk:()=>{
       if(quests.bread===1){
         quests.bread=2;if(!carryItem)carryItem='roll';saveGame();sfx.coin();
-        say(["Hana sent you?! My big","sister from the harbor?","Oh, take her TWO — no,","take her the prettiest","sakura roll on the shelf!","Tell her the oven misses","her too."]);
-      }else say(INTERIORS.bakery.npc.lines);
+        say(["Hana sent you?! My big","sister from the harbor?","Oh, take her TWO — no,","take her the prettiest","sakura roll on the shelf!","Tell her the oven misses","her too."]);return}
+      if(kqTalk('r','bakery'))return;
+      say(INTERIORS.bakery.npc.lines);
     },
     lines:["Fresh from the oven!","Mushroom buns, sakura rolls,","snow-sugar loaves...","Champions eat free... one day","when you have all nine badges!"]},
     extras:[{x:230,y:150,color:'#8a7a5a',lines:["I bike from Harbor Town","every day for these buns.","Worth every pedal."]},
@@ -1953,6 +2301,7 @@ const INTERIORS={
   arcade:{draw:drawRoomArcade,npc:{x:240,y:150,color:'#3b5bd1',
     style:{skin:'#8a5a3a',hs:'spiky',hair:'#b56ad1',hairD:'#8a44ad',top:'#2e2e3a',jacket:'#3b5bd1',stripe:'#7fffd4',glasses:true,pants:'#1a1c2c'},
     onTalk:()=>{
+      if(kqTalk('r','arcade'))return;
       if(quests.grip===1){gainItem('grip','grip',
         ["An orange paddle grip? Yeah,","it turned up in the prize","bin last week!","Kept meaning to return it.","Tell Pip the claw says","sorry."]);return}
       dialog={lines:INTERIORS.arcade.npc.lines,idx:0,opts:INTERIORS.arcade.npc.opts};
@@ -2005,12 +2354,13 @@ const INTERIORS={
 };
 function enterRoom(door){
   interior=INTERIORS[door.room];exitDoor=door;
+  floorIdx=0;stairCd=0;
   ipx=W/2;ipy=H-64;
   state='inside';sfx.pop();
 }
 function insideBlocked(nx,ny){
   if(nx<40||nx>W-40||ny<92||ny>H-42)return true;
-  for(const b of interior.blocks){
+  for(const b of curFloor().blocks){
     if(nx+6>b[0]&&nx-6<b[0]+b[2]&&ny+8>b[1]&&ny-2<b[1]+b[3])return true;
   }
   return false;
@@ -2028,8 +2378,27 @@ function updateInside(){
     player.walk+=0.16;
     if(frame%16===0)sfx.step(5);
   }else player.walk=0;
-  // step out the door
-  if(ipy>H-52&&Math.abs(ipx-W/2)<30&&dirDown.dn()){
+  // stairs between floors
+  if(stairCd>0)stairCd--;
+  const cf=curFloor();
+  if(stairCd===0&&interior.floors){
+    if(cf.up&&ipx>cf.up.x1&&ipx<cf.up.x2&&ipy>cf.up.y1&&ipy<cf.up.y2){
+      floorIdx++;stairCd=40;sfx.step(10);
+      const nf=curFloor();
+      if(nf.down){ipx=(nf.down.x1+nf.down.x2)/2-30;ipy=(nf.down.y1+nf.down.y2)/2}
+      else{ipx=W/2;ipy=H-70}
+      return;
+    }
+    if(cf.down&&ipx>cf.down.x1&&ipx<cf.down.x2&&ipy>cf.down.y1&&ipy<cf.down.y2){
+      floorIdx--;stairCd=40;sfx.step(10);
+      const nf=curFloor();
+      if(nf.up){ipx=(nf.up.x1+nf.up.x2)/2-30;ipy=(nf.up.y1+nf.up.y2)/2}
+      else{ipx=W/2;ipy=H-70}
+      return;
+    }
+  }
+  // step out the door (ground floor only)
+  if(floorIdx===0&&ipy>H-52&&Math.abs(ipx-W/2)<30&&dirDown.dn()){
     state='world';interior=null;doorCd=32;
     player.x=(exitDoor.x+exitDoor.ex)*TS+8;
     player.y=(exitDoor.y+exitDoor.ey)*TS+8;
@@ -2042,7 +2411,8 @@ function updateInside(){
       else say(["Squeak! Look at it SHINE","up on that shelf!","Thank you, big friend."]);
       return;
     }
-    const folks=[interior.npc,...(interior.extras||[])];
+    const fl=curFloor();
+    const folks=[...(fl.npc?[fl.npc]:[]),...(fl.extras||[])];
     for(const n of folks){
       if(Math.abs(ipx-n.x)<44&&Math.abs(ipy-n.y)<62){
         if(n.onTalk){n.onTalk();return}
@@ -2065,8 +2435,9 @@ function updateInside(){
   }
 }
 function drawInside(){
-  interior.draw();
-  const folks=[interior.npc,...(interior.extras||[])];
+  const fl=curFloor();
+  fl.draw();
+  const folks=[...(fl.npc?[fl.npc]:[]),...(fl.extras||[])];
   for(const n of folks){
     if(n.cat){
       drawCatNap(n.x,n.y);
@@ -2117,6 +2488,26 @@ function drawCarry(sx,sy){
     px(sx-4,y+1,8,7,'#c0392b');px(sx-4,y+1,2,7,'#8f2a22');px(sx-1,y+3,4,1,'#f5e04b');
   }else if(carryItem==='flower'){
     px(sx-1,y+3,2,5,'#2f9e44');px(sx-3,y,3,3,'#f5a8c0');px(sx+1,y+1,3,3,'#ffd7ef');px(sx-2,y+1,1,1,'#f5e04b');
+  }else if(carryItem==='can'){
+    px(sx-3,y+2,7,6,'#9aa0ad');px(sx+4,y+3,3,2,'#7a808d');px(sx-5,y+1,2,4,'#7a808d');px(sx-2,y+1,4,1,'#b5bbc8');
+  }else if(carryItem==='specs'){
+    px(sx-5,y+3,4,3,'#1a1c2c');px(sx+1,y+3,4,3,'#1a1c2c');px(sx-1,y+3,2,1,'#1a1c2c');
+    px(sx-4,y+4,2,1,'rgba(200,230,255,0.7)');px(sx+2,y+4,2,1,'rgba(200,230,255,0.7)');
+  }else if(carryItem==='beanie'){
+    px(sx-4,y+2,8,5,'#2e2e3a');px(sx-4,y+5,8,2,'#f1c40f');px(sx-1,y,2,3,'#f1c40f');
+  }else if(carryItem==='snack'){
+    px(sx-4,y+2,8,6,'#e8d5a0');px(sx-3,y+1,6,2,'#c9b380');px(sx-2,y+4,4,2,'#5aa0c5');
+  }else if(carryItem==='flour'){
+    px(sx-4,y+1,8,8,'#f4f0e0');px(sx-4,y+1,8,2,'#d8ccb0');px(sx-2,y+4,4,3,'#c9b380');
+  }else if(carryItem==='pennant'){
+    px(sx-1,y,2,9,'#8a5a30');px(sx+1,y,7,3,'#e74c3c');px(sx+1,y+3,5,2,'#e74c3c');
+  }else if(carryItem==='seeds'){
+    px(sx-3,y+2,7,6,'#8a5a30');px(sx-2,y+1,5,2,'#6b4423');px(sx-1,y+4,1,1,'#f5a8c0');px(sx+1,y+5,1,1,'#f5e04b');
+  }else if(carryItem==='case'){
+    px(sx-5,y+2,10,7,'#8a5a30');px(sx-5,y+2,10,2,'#6b4423');px(sx-1,y+1,2,2,'#54341a');px(sx+2,y+5,2,2,'#e85d75');
+  }else if(carryItem==='coffee'){
+    px(sx-3,y+2,6,6,'#f4f0e0');px(sx+3,y+3,2,3,'#f4f0e0');px(sx-2,y+2,4,1,'#6b4423');
+    drawSteam(sx,y);
   }
 }
 
@@ -2125,7 +2516,9 @@ const coinSpots=[[120,60],[120,75],[100,90],[80,90],[64,90],[56,70],[56,60],[60,
 [52,84],[46,110],[46,125],[52,137],[58,140],[130,92],[150,92],[168,100],[168,115],[168,130],
 [160,141],[175,141],[135,40],[150,40],[120,50],[112,36],[186,45],[196,44],[204,44],[208,48],
 [212,56],[184,92],[176,92],[122,70],[46,102],[96,157],[110,157],[114,120],
-[88,148],[108,148],[126,148],[86,165],[120,165],[130,157],[76,148]];
+[88,148],[108,148],[126,148],[86,165],[120,165],[130,157],[76,148],
+[88,171],[112,171],[136,171],[96,183],[130,183],[88,193],[144,193],[100,203],[136,203],
+[108,188],[116,196],[113,178],[100,208],[128,208]];
 const coins=coinSpots.filter(([x,y])=>!SOLID(T(x,y))).map(([x,y])=>({x:x*TS+8,y:y*TS+8,got:false}));
 function drawCoin(sx,sy){
   const ph=((frame/9)|0)%4;
@@ -2235,6 +2628,7 @@ function updateWorld(){
         w.pause=140;
         w.dir=player.x<w.x?'left':player.x>w.x+8?'right':player.y<w.y?'up':'down';
         // kindness moments with the citizens
+        if(kqTalk('w',w.name))return;
         if(w.name==='Koji'&&quests.coinq<3){
           dialog={idx:0,lines:["One coin. ONE coin short of","the claw machine plushie...","It's the green one. I've","named him already."],
             opts:[
@@ -2326,9 +2720,11 @@ function teaTalk(n){
   say(n.lines);
 }
 function talkTo(n){
+  if(kqTalk('n',n.id))return;
   if(n.recruit){recruitTalk(n);return}
   if(n.id==='v2'){breadTalk(n);return}
   if(n.id==='v1'){teaTalk(n);return}
+  if(n.id==='v5'){say(n.lines);return}
   // kindness quest moments woven through the island
   if(n.id==='v3'){ // Kip and his runaway beach ball
     if(quests.ball===0){askQuest('ball',
@@ -2491,7 +2887,7 @@ function drawMap(){
   px(0,0,W,H,'rgba(26,28,44,0.75)');
   panel(28,14,W-56,H-28);
   text('ISLAND MAP',W/2,24,P.gold,14,'center');
-  const mw2=280,mh2=210,mx=48,my=46;
+  const mw2=280,mh2=215,mx=48,my=42;
   ctx.drawImage(mini,mx,my,mw2,mh2);
   ctx.strokeStyle=P.white;ctx.lineWidth=2;ctx.strokeRect(mx-1,my-1,mw2+2,mh2+2);
   const spotLabels={sprint:'MUSHROOM BEACH',archery:'PAGODA WOODS',fishing:'HARBOR TOWN',
@@ -2506,7 +2902,7 @@ function drawMap(){
     if(has){text('✓',sx,sy-5,P.white,9,'center')}
     text(spotLabels[n.id]||'',sx,sy+9,P.white,7,'center');
   }
-  const extras=[[52,86,'SAKURA ISLE'],[190,90,'BEAST ISLE'],[120,88,'TEAM PLAZA'],[104,156,'THE CITY']];
+  const extras=[[52,86,'SAKURA ISLE'],[190,90,'BEAST ISLE'],[120,88,'TEAM PLAZA'],[104,156,'THE CITY'],[116,188,'MIDTOWN & PARK']];
   for(const [ex,ey,lbl] of extras){
     text(lbl,mx+ex/MW*mw2,my+ey/MH*mh2,'rgba(244,244,244,0.85)',7,'center');
   }
