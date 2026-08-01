@@ -70,16 +70,16 @@ const SOLID=t=>t===0||t===8||t===3||t===6||t===11||t===12||t===14||t===16||t===2
     }
   }
   // ---- islands ----
-  blob(120,90,27,20,{tree:0.10,rock:0.015,flower:0.06});           // central hub
-  blob(120,42,23,16,{tree:0.06,rock:0.05});                        // snow mountain (N)
-  blob(62,46,22,13,{tree:0.08,rock:0.02});                         // harbor town (NW)
-  blob(180,38,19,13,{tree:0.16,flower:0.04});                      // pagoda woods (NE)
-  blob(213,55,7,5,{tree:0.12});                                    // islet
-  blob(203,17,6,4,{tree:0.1});                                     // islet
-  blob(52,90,16,11,{tree:0.14,mapleTrees:true,flower:0.05});       // maple isle (W)
-  blob(56,138,18,12,{flower:0.12,rock:0.02});                      // castle isle (SW)
-  blob(190,95,20,14,{base:19,rock:0.06,dark:true});                // beast isle (E)
-  blob(168,140,20,12,{tree:0.06,mush:0.08,flower:0.03});           // mushroom beach (SE)
+  blob(120,90,30,23,{tree:0.10,rock:0.015,flower:0.06});           // central hub
+  blob(120,42,27,19,{tree:0.06,rock:0.05});                        // snow mountain (N)
+  blob(62,46,25,16,{tree:0.08,rock:0.02});                         // harbor town (NW)
+  blob(180,38,23,16,{tree:0.16,flower:0.04});                      // pagoda woods (NE)
+  blob(213,55,9,6,{tree:0.12});                                    // islet
+  blob(203,17,8,5,{tree:0.1});                                     // islet
+  blob(52,90,20,14,{tree:0.14,mapleTrees:true,flower:0.05});       // maple isle (W)
+  blob(56,138,21,15,{flower:0.12,rock:0.02});                      // castle isle (SW)
+  blob(190,95,24,17,{base:19,rock:0.06,dark:true});                // beast isle (E)
+  blob(168,140,23,15,{tree:0.06,mush:0.08,flower:0.03});           // mushroom beach (SE)
   // snow cap on mountain
   for(let y=26;y<=48;y++)for(let x=104;x<=136;x++){
     const dx=(x-120)/12,dy=(y-37)/9;
@@ -747,7 +747,13 @@ function drawTile(t,sx,sy,x,y){
       px(sx+6,sy+11,2,2,P.flower1); break;
     case 9: px(sx,sy,TS,TS,P.snow); if(v<2)px(sx+3+v*4,sy+4+v*4,2,1,P.snowD); break;
     case 10: px(sx,sy,TS,TS,P.stone);
-      px(sx,sy,TS,1,P.stoneD);px(sx,sy+8,TS,1,P.stoneD);px(sx+8,sy,1,8,P.stoneD);px(sx+3,sy+9,1,7,P.stoneD); break;
+      px(sx,sy,TS,1,P.stoneD);px(sx,sy+8,TS,1,P.stoneD);px(sx+8,sy,1,8,P.stoneD);px(sx+3,sy+9,1,7,P.stoneD);
+      {const sv=(x*13+y*29)%31;
+       if(sv===0){px(sx+5,sy+6,6,5,'#7a808d');px(sx+6,sy+7,4,3,'#565c6c');px(sx+7,sy+8,2,1,'#9aa0ad')}
+       else if(sv===1){px(sx+4,sy+11,8,3,'#565c6c');px(sx+5,sy+12,1,1,'#3a3f4e');px(sx+7,sy+12,1,1,'#3a3f4e');px(sx+9,sy+12,1,1,'#3a3f4e')}
+       else if(sv===2)px(sx+2,sy+4,9,1,'#8a90a0');
+       else if(sv===3)px(sx+6,sy+2,1,7,'#8a90a0');}
+      break;
     case 11: px(sx,sy,TS,TS,P.grass);
       px(sx+2,sy+12,13,3,'rgba(20,25,40,0.22)');
       px(sx+6,sy+9,4,5,P.trunk);
@@ -764,7 +770,17 @@ function drawTile(t,sx,sy,x,y){
     case 14: px(sx,sy,TS,TS,P.dgrass);
       px(sx+3,sy+5,10,8,P.drock);px(sx+5,sy+3,6,4,P.drock);px(sx+4,sy+9,5,3,'#2a2a33'); break;
     case 16: px(sx,sy,TS,TS,P.wall);
-      px(sx,sy,TS,1,P.wallD);px(sx,sy+8,TS,1,P.wallD);px(sx+8,sy+1,1,7,P.wallD);px(sx+4,sy+9,1,7,P.wallD); break;
+      px(sx,sy,TS,1,P.wallD);px(sx,sy+8,TS,1,P.wallD);px(sx+8,sy+1,1,7,P.wallD);px(sx+4,sy+9,1,7,P.wallD);
+      {const wv=(x*31+y*17)%7;
+       if(wv<3){const lit2=nightAmount()>0.35&&((x*7+y*11)%3!==0);
+         px(sx+4,sy+3,8,8,'#3d4250');
+         px(sx+5,sy+4,6,6,lit2?'#ffe9a0':'#bfd8e8');
+         px(sx+5,sy+4,6,1,lit2?'#e0c060':'#8fb8d0');
+         px(sx+8,sy+4,1,6,'#3d4250');
+         px(sx+4,sy+11,8,1,'#6a7086');}
+       else if(wv===3){px(sx+5,sy+5,7,5,'#9aa0ad');px(sx+6,sy+6,5,3,'#7a808d');px(sx+7,sy+10,3,1,'#565c6c')}
+       else if(wv===4)px(sx+3,sy+12,10,2,'rgba(0,0,0,0.12)');}
+      break;
     case 17: px(sx,sy,TS,TS,'#b0824f');
       px(sx,sy+5,TS,1,P.woodD);px(sx,sy+10,TS,1,P.woodD);px(sx,sy,TS,1,'#c99a63'); break;
     case 18: px(sx,sy,TS,TS,P.stone);
@@ -1252,8 +1268,9 @@ function drawDayNight(cx,cy){
     ctx.fillRect(0,0,W,H);
     // lantern light pools
     for(const d of decor){
-      if(d.f!==drawLantern)continue;
-      const sx=d.x+3-cx,sy=d.y-4-cy;
+      const isS=d.f===drawStreetlamp;
+      if(d.f!==drawLantern&&!isS)continue;
+      const sx=d.x+(isS?7:3)-cx,sy=d.y+(isS?-16:-4)-cy;
       if(sx<-60||sx>W+60||sy<-60||sy>H+60)continue;
       const g=ctx.createRadialGradient(sx,sy,2,sx,sy,34);
       g.addColorStop(0,'rgba(255,214,110,'+(0.34*n)+')');
@@ -1500,6 +1517,35 @@ function drawMonument(sx,sy){
   px(sx+12,sy-28,2,3,'#d9ac0e');px(sx+15,sy-29,2,4,'#d9ac0e');px(sx+18,sy-28,2,3,'#d9ac0e');
   if(Math.sin(frame/30)>0.3)px(sx+23,sy-33,2,1,'#ffffff');         // glint
 }
+function drawStreetlamp(sx,sy){
+  px(sx+3,sy+14,8,2,'rgba(0,0,0,0.2)');
+  px(sx+6,sy-14,2,28,'#3d3d45');px(sx+5,sy+12,4,2,'#2e2e38');
+  px(sx+2,sy-18,10,4,'#2e2e38');
+  const lit=nightAmount()>0.3;
+  px(sx+4,sy-17,6,2,lit?'#ffe9a0':'#bfd8e8');
+  if(lit)px(sx+3,sy-19,8,6,'rgba(255,233,160,0.22)');
+}
+function drawEntrances(cx,cy){
+  // every generated building gets a real entrance: awning, glass doors, step, lamps
+  for(const d of DOORS){
+    if(!/^g\d/.test(d.room))continue;
+    const sx=d.x*16-cx,sy=d.y*16-cy;
+    if(sx<-40||sx>W+40||sy<-60||sy>H+40)continue;
+    const ac=['#c0392b','#3d6a2a','#3d5a80','#8e44ad','#b8860b','#2a8a80'][(d.x*7+d.y*13)%6];
+    px(sx-1,sy-6,18,4,'#3d2e20');                                    // lintel
+    px(sx+1,sy-3,14,19,'#54341a');                                   // frame
+    px(sx+2,sy-2,5,17,'#8a5a30');px(sx+9,sy-2,5,17,'#8a5a30');       // double doors
+    px(sx+3,sy-1,3,5,'#bfd8e8');px(sx+10,sy-1,3,5,'#bfd8e8');        // glass panes
+    px(sx+3,sy+1,3,1,'#8fb8d0');px(sx+10,sy+1,3,1,'#8fb8d0');
+    px(sx+7,sy+6,1,3,P.gold);px(sx+8,sy+6,1,3,P.gold);               // handles
+    px(sx-3,sy-11,22,5,ac);                                          // awning
+    for(let i=0;i<5;i++)px(sx-3+i*5,sy-11,2,5,'rgba(255,255,255,0.35)');
+    px(sx-3,sy-6,22,1,'rgba(0,0,0,0.3)');
+    px(sx-1,sy+15,18,2,'#9aa0ad');px(sx-1,sy+17,18,1,'#7a808d');     // stone step
+    const lit=nightAmount()>0.3;
+    px(sx-3,sy,2,4,lit?'#ffe9a0':'#8a90a0');px(sx+17,sy,2,4,lit?'#ffe9a0':'#8a90a0');
+  }
+}
 function drawFerries(cx,cy){
   const boats=[
     [77*16,(208+Math.sin(frame/420)*24)*16,1],
@@ -1518,6 +1564,16 @@ function drawFerries(cx,cy){
 const decor=[
   {f:drawTemple,x:57.5*16,y:24*16-96},
   {f:drawMonument,x:73*16,y:243*16},
+  // city streetlamps
+  {f:drawStreetlamp,x:86*16,y:154*16},{f:drawStreetlamp,x:130*16,y:154*16},
+  {f:drawStreetlamp,x:87*16,y:173*16},{f:drawStreetlamp,x:126*16,y:173*16},
+  {f:drawStreetlamp,x:87*16,y:195*16},{f:drawStreetlamp,x:147*16,y:185*16},
+  {f:drawStreetlamp,x:86*16,y:211*16},{f:drawStreetlamp,x:102*16,y:211*16},
+  {f:drawStreetlamp,x:118*16,y:221*16},{f:drawStreetlamp,x:134*16,y:221*16},
+  {f:drawStreetlamp,x:86*16,y:231*16},{f:drawStreetlamp,x:118*16,y:231*16},
+  {f:drawStreetlamp,x:142*16,y:241*16},{f:drawStreetlamp,x:94*16,y:241*16},
+  {f:drawStreetlamp,x:110*16,y:249*16},
+  {f:drawStreetlamp,x:170*16,y:198*16},{f:drawStreetlamp,x:190*16,y:212*16},{f:drawStreetlamp,x:204*16,y:226*16},
   {f:drawSail,x:78*16,y:196.5*16},{f:drawSail,x:156*16,y:235.5*16},
   {f:drawSail,x:160*16,y:190.5*16},{f:drawSail,x:70*16,y:228.5*16},
   {f:drawFlagship,x:74*16,y:24.5*16},
@@ -3087,6 +3143,7 @@ function drawWorld(){
   }
   drawAmbient(cx,cy);
   drawFerries(cx,cy);
+  drawEntrances(cx,cy);
   drawClouds(cx,cy);
   // decorations
   for(const d of decor){
