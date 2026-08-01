@@ -169,6 +169,10 @@ const SOLID=t=>t===0||t===8||t===3||t===6||t===11||t===12||t===14||t===16||t===2
   rect(114,85,126,95,10);                                   // stone plaza
   for(let y=89;y<=91;y++)for(let x=118;x<=122;x++)setT(x,y,2); // mossy center patch
   [[116,87],[124,87],[116,93],[124,93]].forEach(([x,y])=>setT(x,y,20)); // statue pedestals
+  // ---- TROPHY HOUSE, just north of the plaza ----
+  for(let y=78;y<=84;y++)for(let x=116;x<=124;x++){const t=T(x,y);if(t===3||t===6||t===7)setT(x,y,2)}
+  rect(117,79,123,83,16);setT(120,83,22);
+  setT(120,84,4);
 
   // ---- CITY ISLAND (south): the big city ----
   blob(108,157,28,15,{tree:0.02,flower:0.03});
@@ -375,6 +379,10 @@ const badgeCount=()=>Object.values(badges).filter(b=>b).length;
 let crowned=false;
 let tamed=false; // the beast of Beast Isle
 let coinCount=0;
+// kindness quests: 0=not started, 1=asked, 2=item in hand, 3=delivered
+const quests={mouse:0,bread:0,tea:0};
+let carryItem=null; // 'trophy' | 'roll' | 'tea'
+const trophyCount=()=>((quests.mouse>=2)?1:0)+((quests.bread>=3)?1:0)+((quests.tea>=3)?1:0);
 // ---------- teams ----------
 let team=null;
 const teams=[
@@ -1319,8 +1327,45 @@ let interior=null,ipx=240,ipy=300,exitDoor=null,doorCd=0,lastTX=-1,lastTY=-1;
 const DOORS=[
   {x:94,y:154,room:'library',ex:0,ey:1},{x:102,y:154,room:'grocery',ex:0,ey:1},
   {x:110,y:154,room:'bakery',ex:0,ey:1},{x:96,y:159,room:'arcade',ex:0,ey:-1},
-  {x:104,y:159,room:'ramen',ex:0,ey:-1},{x:112,y:159,room:'house',ex:0,ey:-1}
+  {x:104,y:159,room:'ramen',ex:0,ey:-1},{x:112,y:159,room:'house',ex:0,ey:-1},
+  {x:120,y:83,room:'trophy',ex:0,ey:1}
 ];
+// the plaza mouse — small, squeaky, surprisingly wise
+function drawMouse(sx,sy){
+  const hop=Math.sin(frame/16)>0.6?-1:0;
+  sy+=hop;
+  px(sx-5,sy+5,12,3,'rgba(0,0,0,0.15)');
+  px(sx+5,sy+1,5,2,'#8a8a9a');px(sx+9,sy,2,2,'#8a8a9a');       // tail
+  px(sx-5,sy-2,10,7,'#9aa0ad');                                 // body
+  px(sx-7,sy-4,6,6,'#b5bbc8');                                  // head
+  px(sx-7,sy-6,3,3,'#9aa0ad');px(sx-3,sy-6,3,3,'#9aa0ad');      // ears
+  px(sx-6,sy-5,1,1,'#f5a8c0');px(sx-2,sy-5,1,1,'#f5a8c0');      // inner ears
+  px(sx-6,sy-2,1,1,'#1a1c2c');                                  // eye
+  px(sx-8,sy-1,1,1,'#f5a8c0');                                  // nose
+  px(sx-9,sy,2,1,'#d5dae2');px(sx-9,sy-2,2,1,'#d5dae2');        // whiskers
+  if(quests.mouse===0){px(sx+1,sy-7,6,5,P.gold);px(sx+2,sy-9,4,2,P.gold);px(sx,sy-6,1,3,P.gold);px(sx+7,sy-6,1,3,P.gold)} // his too-heavy trophy
+}
+function mouseTalk(){
+  if(quests.mouse===0){
+    dialog={idx:0,portrait:null,
+      lines:["Squeak! A new face — I can","always tell.",
+             "Winning races is one way to","be a champion here...",
+             "but around this island,","KINDNESS counts double!",
+             "See this trophy? It belongs","with the Trophy Master...",
+             "and it weighs more than","three of me. Squeak.",
+             "Would you carry it up to the","Trophy House for me?"],
+      opts:[
+        {label:"Of course!",fn:()=>{quests.mouse=1;carryItem='trophy';saveGame();
+          say(["Squeak-hooray! The Trophy","House is just north of","this plaza.","I'll scurry ahead and meet","you there!"])}},
+        {label:"No way.",fn:()=>{say(["Squeak... that's fair.","It IS very shiny though.","I'll be here if you change","your mind!"])}}
+      ]};
+    state='dialog';sfx.pop();
+  }else if(quests.mouse===1){
+    say(["Squeak! The Trophy House is","just north of the plaza —","the little stone hall!","I'll race you there!"]);
+  }else{
+    say(["Squeak-squeak!","(The mouse does a happy","backflip.)","Kindest hero on the island!"]);
+  }
+}
 function roomFrame(wall,floor){
   px(0,0,W,H,'#101322');
   px(20,16,W-40,60,wall);
@@ -1652,7 +1697,53 @@ function drawRoomHouse(){
   px(298,238,14,10,'#8a4a3a');px(300,230,4,9,'#5f9f5f');px(305,228,4,11,'#7fbf7f');px(295,232,4,7,'#5f9f5f');
   px(320,242,10,8,'#8a4a3a');px(322,236,3,7,'#7fbf7f');px(326,234,3,9,'#5f9f5f');
 }
+function drawTrophyCup(x,y,big){
+  const s=big?2:1;
+  px(x,y+6*s,6*s,2*s,'#b8860b');
+  px(x+1*s,y+4*s,4*s,2*s,'#d9ac0e');
+  px(x,y,6*s,4*s,'#f5e04b');
+  px(x-2*s,y,2*s,3*s,'#f5e04b');px(x+6*s,y,2*s,3*s,'#f5e04b');
+  px(x+1*s,y+1*s,2*s,1*s,'#fff8c0');
+}
+function drawRoomTrophy(){
+  roomFrame('#4a3a5a','#8a7a5a');
+  for(let i=0;i<10;i++)px(20,84+i*24,W-40,1,'#7a6a4a');
+  // banners
+  for(const bx of [60,380]){px(bx,18,26,40,'#8e44ad');px(bx,52,26,8,'#6a2a8a');px(bx+9,28,8,8,P.gold)}
+  // red carpet to the master's desk
+  px(210,84,60,192,'#a83226');px(216,84,48,192,'#c0453a');
+  // master's desk
+  px(180,84,120,36,'#6b4423');px(180,84,120,6,'#8a5a30');px(180,116,120,4,'rgba(0,0,0,0.15)');
+  drawTrophyCup(196,70,false);drawTrophyCup(272,70,false);
+  // pedestal wings: earned trophies shine, empty ones wait
+  const earned=trophyCount();
+  const spots=[[70,140],[70,200],[130,170],[350,140],[350,200],[390,170]];
+  for(let i=0;i<spots.length;i++){
+    const [px2,py2]=spots[i];
+    px(px2-4,py2+34,32,5,'rgba(0,0,0,0.2)');
+    px(px2-2,py2+14,28,22,'#9aa0ad');px(px2,py2+16,24,18,'#b5bbc8');px(px2-2,py2+14,28,3,'#c5cbd8');
+    if(i<earned){drawTrophyCup(px2+6,py2-4,true);
+      if(frame%40<20)px(px2+4,py2-8,2,2,'#fff8c0');
+    }else{px(px2+8,py2+2,10,8,'rgba(0,0,0,0.15)')}
+  }
+  // the mouse waits here once you've agreed to help
+  if(quests.mouse>=1)drawMouse(320,110);
+  text(earned+' kindness '+(earned===1?'trophy':'trophies')+' earned',W/2,H-56,'#e8d5a0',9,'center');
+}
 const INTERIORS={
+  trophy:{draw:drawRoomTrophy,npc:{x:240,y:70,color:'#8e44ad',
+    style:{skin:'#e8c8a8',hs:'bald',hair:'#8a8a9a',top:'#f5e04b',jacket:'#8e44ad',beard:'#d5dae2',glasses:true,pants:'#4a2a5a'},
+    onTalk:()=>{
+      if(carryItem==='trophy'){
+        carryItem=null;quests.mouse=2;saveGame();sfx.win();
+        say(["Ah! The little courier's","trophy — delivered at last!","You carried this the whole","way? Marvelous.","I am the Trophy Master. I","keep trophies not for speed","or strength...","but for KINDNESS.","This one goes on the shelf —","in YOUR honor.","Keep helping islanders, and","this hall will fill up!"]);
+      }else{
+        const t=trophyCount();
+        say(["Welcome to the Trophy House.","Every cup here was earned by","helping someone.","You have "+t+" kindness "+(t===1?"trophy":"trophies")+" so far.","Islanders who need a hand","will always ask — keep your","ears open, champion."]);
+      }
+    },
+    lines:["..."]},
+    blocks:[[180,84,120,36],[66,140,32,30],[66,200,32,30],[126,170,32,30],[346,140,32,30],[346,200,32,30],[386,170,32,30],[54,18,38,44],[374,18,38,44]]},
   library:{draw:drawRoomLibrary,npc:{x:80,y:70,color:'#8a7a5a',
     style:{skin:'#e8c8a8',hs:'bun',hair:'#b0b8c5',hairD:'#8a8a9a',top:'#6a5a7a',jacket:'#4a3a5a',glasses:true,pants:'#3a3a45'},
     lines:["Welcome to the Island Library.","Every champion's story is","written here...","They say the beast guards a","warm heart. And coins hide","in flower patches!"]},
@@ -1667,6 +1758,12 @@ const INTERIORS={
     blocks:[[90,140,54,110],[200,140,54,110],[310,140,54,110],[352,84,100,38],[28,44,240,30]]},
   bakery:{draw:drawRoomBakery,npc:{x:185,y:70,color:'#e8a0b8',
     style:{skin:'#f5d5a8',hs:'chef',hair:'#f4f4f4',top:'#f4f4f4',apron:'#e8a0b8',blush:true,pants:'#8a5a6a'},
+    onTalk:()=>{
+      if(quests.bread===1){
+        quests.bread=2;if(!carryItem)carryItem='roll';saveGame();sfx.coin();
+        say(["Hana sent you?! My big","sister from the harbor?","Oh, take her TWO — no,","take her the prettiest","sakura roll on the shelf!","Tell her the oven misses","her too."]);
+      }else say(INTERIORS.bakery.npc.lines);
+    },
     lines:["Fresh from the oven!","Mushroom buns, sakura rolls,","snow-sugar loaves...","Champions eat free... one day","when you have all nine badges!"]},
     extras:[{x:230,y:150,color:'#8a7a5a',lines:["I bike from Harbor Town","every day for these buns.","Worth every pedal."]},
             {x:220,y:240,color:'#c98fb8',lines:["The sakura rolls sell out","by noon. You made it!"]}],
@@ -1691,6 +1788,12 @@ const INTERIORS={
     blocks:[[140,70,60,170],[280,70,60,170],[140,220,200,40],[214,58,52,40]]},
   house:{draw:drawRoomHouse,npc:{x:95,y:130,color:'#b05a8a',
     style:{skin:'#e8c8a8',hs:'bun',hair:'#e8e4f0',hairD:'#c5c0d8',top:'#b05a8a',apron:'#f4f0e0',glasses:true,blush:true,pants:'#6a4a5a'},
+    onTalk:()=>{
+      if(quests.tea===1){
+        quests.tea=2;if(!carryItem)carryItem='tea';saveGame();sfx.coin();
+        say(["Old Tomo wants my bone-warm","tea? That rascal!","Here — a full flask, wrapped","snug so it stays hot.","Tell him he still owes me a","dance from the festival of","'62!"]);
+      }else say(INTERIORS.house.npc.lines);
+    },
     lines:["Oh, hello dear! Come in,","come in. Tea's warm.","My grandmother helped build","the torii gate at the plaza.","This island loves you —","I can tell."]},
     extras:[{x:395,y:172,cat:true,color:'#e8923a',lines:["(A round orange cat blinks","slowly at you.)","...You feel deeply approved."]}],
     blocks:[[150,44,120,32],[360,150,80,90],[60,150,70,50],[290,22,140,44]]}
@@ -1728,9 +1831,16 @@ function updateInside(){
     sfx.pop();return;
   }
   if(action()){
+    // the mouse, waiting in the Trophy House
+    if(interior===INTERIORS.trophy&&quests.mouse>=1&&Math.abs(ipx-320)<34&&Math.abs(ipy-110)<40){
+      if(quests.mouse===1)say(["Squeak! You made it!","Give the trophy to the","Trophy Master — go on!"]);
+      else say(["Squeak! Look at it SHINE","up on that shelf!","Thank you, big friend."]);
+      return;
+    }
     const folks=[interior.npc,...(interior.extras||[])];
     for(const n of folks){
-      if(Math.abs(ipx-n.x)<34&&Math.abs(ipy-n.y)<34){
+      if(Math.abs(ipx-n.x)<44&&Math.abs(ipy-n.y)<62){
+        if(n.onTalk){n.onTalk();return}
         if(n.opts){dialog={lines:n.lines,idx:0,opts:n.opts};state='dialog';sfx.pop()}
         else say(n.lines);
         return;
@@ -1749,11 +1859,30 @@ function drawInside(){
       if(n.style)drawPersonEx(n.x-8,n.y-8,'down',0,n.style);
       else drawPersonEx(n.x-8,n.y-8,'down',0,{top:n.color,hair:'#3d2b1e',hs:['flat','bowl','curly','cap','long'][((n.x+n.y)/7|0)%5],blush:(n.x+n.y)%3===0});
     }
-    if(Math.abs(ipx-n.x)<40&&Math.abs(ipy-n.y)<40)text('!',n.x,n.y-22,P.gold,12,'center');
+    if(Math.abs(ipx-n.x)<50&&Math.abs(ipy-n.y)<68)text('!',n.x,n.y-22,P.gold,12,'center');
   }
   shadow(ipx,ipy+8,7,3);
   drawHero(ipx-8,ipy-8,player.dir,player.walk,0);
+  drawCarry(ipx,ipy);
   text('walk down through the door to leave',W/2,H-22,'rgba(244,244,244,0.6)',8,'center');
+}
+// what the hero is carrying, held proudly overhead
+function drawCarry(sx,sy){
+  if(!carryItem)return;
+  const bump=Math.sin(frame/12)>0?-1:0;
+  const y=sy-18+bump;
+  if(carryItem==='trophy'){
+    px(sx-4,y+6,8,2,'#b8860b');px(sx-3,y+4,6,2,'#d9ac0e');
+    px(sx-4,y,8,4,'#f5e04b');px(sx-6,y,2,3,'#f5e04b');px(sx+4,y,2,3,'#f5e04b');
+    px(sx-3,y+1,3,1,'#fff8c0');
+  }else if(carryItem==='roll'){
+    px(sx-4,y+2,8,5,'#ffd7ef');px(sx-3,y+1,6,2,'#f7c6d8');
+    px(sx-1,y+3,2,2,'#e8a0b8');
+  }else if(carryItem==='tea'){
+    px(sx-3,y+1,6,7,'#bfe4e8');px(sx-2,y,4,2,'#8a5a30');
+    px(sx+3,y+3,2,3,'#bfe4e8');
+    drawSteam(sx,y-2);
+  }
 }
 
 // ---------- coins ----------
@@ -1775,7 +1904,7 @@ function drawCoin(sx,sy){
 function saveGame(){
   try{
     localStorage.setItem('advisland',JSON.stringify({
-      badges,team,crowned,tamed,coinCount,
+      badges,team,crowned,tamed,coinCount,quests,carryItem,
       coins:coins.map(c=>c.got),px:player.x,py:player.y}));
   }catch(e){}
 }
@@ -1787,6 +1916,8 @@ let hasSave=false;
     hasSave=true;
     Object.keys(badges).forEach(k=>{if(d.badges&&d.badges[k])badges[k]=true});
     team=d.team||null;crowned=!!d.crowned;tamed=!!d.tamed;coinCount=d.coinCount|0;
+    if(d.quests)Object.keys(quests).forEach(k=>{if(d.quests[k])quests[k]=d.quests[k]});
+    carryItem=d.carryItem||null;
     if(d.coins)d.coins.forEach((g,i)=>{if(coins[i])coins[i].got=g});
     if(d.px&&d.py&&!SOLID(T((d.px/TS)|0,(d.py/TS)|0))){player.x=d.px;player.y=d.py}
   }catch(e){}
@@ -1855,6 +1986,10 @@ function updateWorld(){
   if(frame%300===0)saveGame();
   if(pressed('m')||pressed('M')){state='map';return}
   if(action()){
+    // the plaza mouse
+    if(quests.mouse!==1&&Math.abs(player.x-(120*TS+8))<30&&Math.abs(player.y-(89*TS+4))<34){
+      mouseTalk();return;
+    }
     for(const n of npcs){
       const npx=n.x*TS+8,npy=n.y*TS+8;
       if(Math.abs(player.x-npx)<26&&Math.abs(player.y-npy)<26){talkTo(n);return}
@@ -1898,8 +2033,42 @@ function recruitTalk(n){
     ]};
   state='dialog';
 }
+function breadTalk(n){
+  if(quests.bread===0){
+    dialog={idx:0,lines:["My little sister bakes at the","city bakery now!","I miss her sakura rolls","something fierce...","Could you bring one back for","me next time you're there?"],
+      opts:[
+        {label:"Of course!",fn:()=>{quests.bread=1;saveGame();say(["Oh, thank you!","Tell her Hana says the","harbor misses her!"])}},
+        {label:"Maybe later.",fn:()=>{say(["No rush at all, dear."])}}
+      ]};
+    state='dialog';sfx.pop();return;
+  }
+  if(quests.bread===1){say(["The bakery is in the city —","south island, north row!","Tell my sister I said hi!"]);return}
+  if(quests.bread===2){
+    quests.bread=3;carryItem=carryItem==='roll'?null:carryItem;saveGame();sfx.win();
+    say(["A sakura roll! And still","warm! Oh, you WONDERFUL","thing.","...I hear the Trophy Master","honors kindness like this.","Go see him at the plaza!"]);return;
+  }
+  say(n.lines);
+}
+function teaTalk(n){
+  if(quests.tea===0){
+    dialog={idx:0,lines:["The granny in the city brews","a tea that fixes old bones.","Mine are VERY old.","Would you fetch me a flask","of it, traveler?"],
+      opts:[
+        {label:"Of course!",fn:()=>{quests.tea=1;saveGame();say(["Good soul!","Her house is the last door","on the city's south row."])}},
+        {label:"Maybe later.",fn:()=>{say(["Heh. These bones can wait.","They've waited decades."])}}
+      ]};
+    state='dialog';sfx.pop();return;
+  }
+  if(quests.tea===1){say(["Granny's house is in the","city — the cozy one at the","end of the shop row!"]);return}
+  if(quests.tea===2){
+    quests.tea=3;carryItem=carryItem==='tea'?null:carryItem;saveGame();sfx.win();
+    say(["Ahh... warm all the way","down. My knees feel forty","years younger!","You're the kind sort. The","Trophy Master should hear","about this!"]);return;
+  }
+  say(n.lines);
+}
 function talkTo(n){
   if(n.recruit){recruitTalk(n);return}
+  if(n.id==='v2'){breadTalk(n);return}
+  if(n.id==='v1'){teaTalk(n);return}
   if(n.villager){say(n.lines);return}
   if(n.id==='delta'){
     if(crowned)say(n.done);
@@ -1949,10 +2118,20 @@ function drawWorld(){
       text('!',sx+8,sy-14,P.gold,12,'center');
     }
   }
+  // the plaza mouse (steps aside while carrying your trophy errand)
+  if(quests.mouse!==1){
+    const msx=120*TS+8-cx,msy=89*TS+4-cy;
+    if(msx>-30&&msx<W+30&&msy>-30&&msy<H+30){
+      drawMouse(msx,msy);
+      if(quests.mouse===0&&Math.abs(player.x-(120*TS+8))<44&&Math.abs(player.y-(89*TS+4))<44)
+        text('!',msx,msy-16,P.gold,12,'center');
+    }
+  }
   drawWalkers(cx,cy);
   drawSparkles(cx,cy);
   shadow(player.x-cx,player.y+8-cy,7,3);
   drawHero(player.x-8-cx,player.y-8-cy,player.dir,player.walk,player.roll);
+  drawCarry(player.x-cx,player.y-cy);
   drawPetals(cx,cy);
   drawWeatherFx();
   drawDayNight(cx,cy);
@@ -1979,7 +2158,8 @@ function drawHud(){
   px(6,hy,54,14,'rgba(26,28,44,0.8)');
   drawCoin(15,hy+7);
   text('× '+coinCount,24,hy+4,P.gold,9);
-  if(tamed){px(64,hy,16,14,'rgba(26,28,44,0.8)');text('🐾',66,hy+2,P.gold,9)}
+  if(trophyCount()>0){px(64,hy,34,14,'rgba(26,28,44,0.8)');text('🏆'+trophyCount(),67,hy+2,P.gold,9)}
+  if(tamed){px(102,hy,16,14,'rgba(26,28,44,0.8)');text('🐾',104,hy+2,P.gold,9)}
   const mmw=86,mmh=Math.round(mmw*MH/MW),mx0=W-mmw-8,my0=8;
   ctx.globalAlpha=0.85;
   ctx.drawImage(mini,mx0,my0,mmw,mmh);
