@@ -2588,6 +2588,27 @@ const GLINES=[
 ["Eastside born. The bridge","noise is a lullaby if","you grew up with it."],
 ["I collect ferry tickets.","Four hundred and six.","All the same route.","It's about the ritual."]
 ];
+const KLINES={
+  home:GLINES.slice(0,21).concat(GLINES.slice(41,56)),
+  office:GLINES.slice(21,28).concat([
+    ["The window won't open.","Building policy.","I've made my peace with","it. Mostly."],
+    ["I brought a plant to","work. It's doing better","than any of us."],
+    ["Lunch is whenever the","stack of forms says it","is. The stack is cruel."]]),
+  shop:GLINES.slice(28,32).concat([
+    ["Inventory day. If it's","not on the shelf, it's in","the back.","If it's not in the back,","it never existed."],
+    ["My dad ran this shop.","His mom before him.","The floor squeaks in the","same three places it","always has."]]),
+  cafe:GLINES.slice(32,36).concat([
+    ["Small, medium, or the","big one nobody finishes?"],
+    ["The regulars have their","table. You can have the","good window one.","Don't tell the regulars."],
+    ["I can latte-art a leaf.","Just the leaf.","We all have a ceiling."],
+    ["Rain days are busiest.","Something about a warm","cup when the window's","all streaky."]]),
+  gym:GLINES.slice(36,38).concat([
+    ["Rest days count too.","That's not me being","soft. That's science."]]),
+  studio:GLINES.slice(38,41).concat([
+    ["I've painted the harbor","forty times.","It keeps changing its","mind about being blue."],
+    ["Clay under the nails is","part of the deal.","Handshake at your own","risk."]])
+};
+const KCOUNT={home:0,office:0,shop:0,cafe:0,studio:0,gym:0};
 const GNAMES=['Marge','Otis','Pearl','Basil','Nia','Fern','Dot','Hal','Wren','Tess','Bram','Cleo','Pim','Milo','Vada','Sol','Ines','Gus','Opal','Remy','Lark','Edda','Finn','Rue','Sable','Toby','Mona','Ash','Petra','Ollie','Greta','Sam','Posy','Cyrus','Belle','Ned','Lita','Joss','Vito','Enid','Rex','Suvi','Cole','Maud','Ivo','Zora','Kip','Ada','Bo','Elsa','Nils','Tilda','Hank','Rina','Levi','Juno'];
 (function(){
   const SK=['#f5d5a8','#e8b88a','#c98f5e','#8a5a3a','#f5e0c8','#e8c8a8'];
@@ -2632,7 +2653,7 @@ const GNAMES=['Marge','Otis','Pearl','Basil','Nia','Fern','Dot','Hal','Wren','Te
     INTERIORS[room]={
       gen:{kind,w:PALS[v%8][0],f:PALS[v%8][1],a:ACC[v%6]},
       draw:drawGenRoom,
-      npc:{x:kb.nx,y:kb.ny,name:GNAMES[v%56],style:st,lines:GLINES[v%56]},
+      npc:{x:kb.nx,y:kb.ny,name:GNAMES[v%56],style:st,lines:KLINES[kind][KCOUNT[kind]++%KLINES[kind].length]},
       blocks:kb.blocks};
   });
 })();
