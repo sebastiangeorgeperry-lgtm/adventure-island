@@ -17,7 +17,7 @@
 "use strict";
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
 ctx.imageSmoothingEnabled=false;
-const W=480,H=360,TS=16,MW=300,MH=230;
+const W=480,H=360,TS=16,MW=360,MH=280;
 
 // ---------- palette ----------
 const P={
@@ -42,7 +42,7 @@ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a
 const map=new Array(MW*MH).fill(8);
 const T=(x,y)=>map[y*MW+x];
 const setT=(x,y,v)=>{if(x>=0&&x<MW&&y>=0&&y<MH)map[y*MW+x]=v};
-const SOLID=t=>t===0||t===8||t===3||t===6||t===11||t===12||t===14||t===16||t===20;
+const SOLID=t=>t===0||t===8||t===3||t===6||t===11||t===12||t===14||t===16||t===20||t===21||t===23||t===24;
 
 (function genMap(){
   const rng=mulberry32(20260720);
@@ -199,7 +199,7 @@ const SOLID=t=>t===0||t===8||t===3||t===6||t===11||t===12||t===14||t===16||t===2
   bld(102,159,107,163,104,159); // ramen bar
   bld(110,159,115,163,112,159); // cozy house
   // north row: big blocks
-  rect(86,142,95,146,16);rect(98,142,111,146,16);rect(114,142,123,146,16);rect(126,142,132,146,16);
+  rect(86,142,95,146,16);rect(98,142,111,146,16);rect(116,142,123,146,16);rect(126,142,132,146,16);
   // side blocks
   rect(86,150,89,154,16);rect(118,150,123,154,16);rect(126,150,131,154,16);
   rect(86,159,89,163,16);rect(118,159,123,163,16);rect(126,159,131,163,16);
@@ -236,6 +236,76 @@ const SOLID=t=>t===0||t===8||t===3||t===6||t===11||t===12||t===14||t===16||t===2
   // waterfront boardwalk along the south shore
   rect(84,207,148,208,5);
   for(let x=86;x<=146;x+=6)setT(x,209,5);
+  // ---- THE LOWER CITY: the island stretches south like a true metropolis ----
+  for(let y=170;y<=255;y++)for(let x=82;x<=150;x++){const t=T(x,y);if(t===0||t===8)setT(x,y,2)}
+  // cross streets marching south
+  rect(84,208,148,210,10);rect(84,218,148,220,10);
+  rect(84,228,148,230,10);rect(84,238,148,240,10);rect(84,248,148,250,10);
+  // avenues running the length of the island
+  for(const ax of [84,92,100,124,132,140,148])rect(ax,204,ax+1,250,10);
+  for(const ax of [108,116])rect(ax,212,ax+1,250,10);
+  // rooftop-mosaic blocks: every parcel a different roof
+  const roofT=[21,23,24,21,24];
+  const bands=[[211,217],[221,227],[231,237],[241,247]];
+  const colsx=[[86,91],[94,99],[102,107],[110,115],[118,123],[126,131],[134,139],[142,147]];
+  let pi=0;
+  for(const [by1,by2] of bands)for(const [bx1,bx2] of colsx){
+    pi++;
+    if(pi%9===0){ // a pocket park
+      rect(bx1,by1,bx2,by2,2);setT(bx1+2,by1+2,3);setT(bx2-1,by2-1,7);continue;
+    }
+    const mid=(by1+by2)>>1;
+    rect(bx1,by1,bx2,mid,roofT[pi%5]);
+    rect(bx1,mid+1,bx2,by2,roofT[(pi+2)%5]);
+  }
+  // blocks filling the band just south of midtown
+  rect(86,205,99,207,roofT[1]);rect(126,205,147,207,roofT[3]);
+  // the long central park grows south: second pond + ballfield
+  for(let y=202;y<=207;y++)for(let x=102;x<=123;x++)setT(x,y,2);
+  for(let y=196;y<=202;y++)for(let x=104;x<=112;x++){
+    const dx=(x-108)/4,dy=(y-199)/3;
+    if(dx*dx+dy*dy<1)setT(x,y,0);
+  }
+  for(let y=202;y<=206;y++)for(let x=110;x<=120;x++){
+    const dx=(x-115)/5,dy=(y-204)/2.4;
+    if(dx*dx+dy*dy<1)setT(x,y,1);
+  }
+  rect(112,202,113,207,4);
+  [[104,204],[120,203],[103,196],[122,201]].forEach(([x,y])=>{if(T(x,y)===2)setT(x,y,3)});
+  // grand diagonal avenue slicing the grid
+  for(let y=206;y<=252;y++){
+    const dxx=140-Math.round((y-206)*0.95);
+    if(dxx>=84&&dxx<=148){setT(dxx,y,10);setT(dxx+1,y,10)}
+  }
+  // the tapered southern tip
+  for(let y=242;y<=256;y++)for(let x=82;x<=150;x++){
+    const half=(256-y)*2.4+4;
+    if(Math.abs(x-115)>half)if(T(x,y)!==8)setT(x,y,y>254?8:0);
+  }
+  // finger piers along both rivers
+  for(let y=176;y<=238;y+=8){
+    const wl=T(82,y),el=T(150,y);
+    if(wl!==0&&wl!==8)for(let x=79;x<=81;x++)if(T(x,y)===0||T(x,y)===8)setT(x,y,5);
+    if(el!==0&&el!==8)for(let x=151;x<=153;x++)if(T(x,y)===0||T(x,y)===8)setT(x,y,5);
+  }
+  // EASTSIDE borough across the river
+  for(let y=190;y<=234;y++)for(let x=166;x<=210;x++){const t=T(x,y);if(t===0||t===8)setT(x,y,2)}
+  rect(168,196,208,197,10);rect(168,210,208,211,10);rect(168,224,208,225,10);
+  for(const ax of [176,188,200])rect(ax,192,ax+1,232,10);
+  let bi=0;
+  for(const [ey1,ey2] of [[199,208],[213,222]])for(const [ex1,ex2] of [[170,174],[179,186],[191,198],[203,207]]){
+    bi++;
+    if(bi%3===0){rect(ex1,ey1,ex2,ey2,2);setT(ex1+1,ey1+1,3);setT(ex2-1,ey2-1,3)}
+    else rect(ex1,ey1,ex2,ey2,roofT[bi%5]);
+  }
+  // two bridges across the east river
+  for(let x=151;x<=165;x++){setT(x,200,13);setT(x,201,13);setT(x,218,13);setT(x,219,13)}
+  rect(150,200,150,201,10);rect(166,200,166,201,10);rect(150,218,150,219,10);rect(166,218,166,219,10);
+  // monument islet in the harbor
+  for(let y=240;y<=248;y++)for(let x=70;x<=78;x++){
+    const dx=(x-74)/4,dy=(y-244)/4;
+    if(dx*dx+dy*dy<1)setT(x,y,dx*dx+dy*dy<0.5?2:1);
+  }
   route(114,96,114,154);        // bridge from Team Plaza into main street
   route(68,140,68,148);route(68,148,84,148); // west bridge: Castle Isle straight into the north street
 })();
@@ -706,6 +776,18 @@ function drawTile(t,sx,sy,x,y){
     case 22: px(sx,sy,TS,TS,'#6b4423');
       px(sx+2,sy,12,16,'#8a5a30');px(sx+3,sy+2,10,5,'#bfd8e8');
       px(sx+11,sy+9,2,2,P.gold);px(sx+2,sy+14,12,2,'#54341a'); break;
+    case 21: px(sx,sy,TS,TS,'#8a6a4a');           // brown rooftop, seen from above
+      px(sx,sy,TS,2,'#6e5238');px(sx,sy,2,TS,'#6e5238');
+      px(sx+10,sy+4,4,4,'#5c4530');px(sx+11,sy+5,2,2,'#3d2e20');
+      if(v<2)px(sx+3,sy+10,4,3,'#9c7c5a'); break;
+    case 23: px(sx,sy,TS,TS,'#6e7484');           // slate rooftop
+      px(sx,sy,TS,2,'#565c6c');px(sx,sy,2,TS,'#565c6c');
+      px(sx+4,sy+4,5,4,'#565c6c');px(sx+5,sy+5,3,2,'#3d4250');
+      if(v<2)px(sx+10,sy+10,3,4,'#828a9c'); break;
+    case 24: px(sx,sy,TS,TS,'#b09a6a');           // tan rooftop with water tank
+      px(sx,sy,TS,2,'#94804f');px(sx,sy,2,TS,'#94804f');
+      if(v<3){px(sx+8,sy+7,6,6,'#6b4423');px(sx+9,sy+5,4,3,'#54341a')}
+      else px(sx+4,sy+9,4,3,'#c4ae7c'); break;
   }
 }
 
@@ -1405,8 +1487,39 @@ function drawStatue(sx,sy,col){
   px(sx+4,sy+7,8,8,col);
   px(sx+5,sy+8,6,3,'rgba(255,255,255,0.35)');
 }
+function drawMonument(sx,sy){
+  // the Harbor Champion — our own lady of the lagoon
+  px(sx-4,sy+16,40,10,'#7a808d');px(sx-2,sy+14,36,4,'#9aa0ad');   // stone base
+  px(sx+4,sy+4,24,12,'#8a909d');px(sx+6,sy+6,20,2,'#b8bec8');     // pedestal
+  px(sx+10,sy-16,12,20,'#e8c93e');                                 // robed body
+  px(sx+8,sy-8,4,10,'#d9ac0e');                                    // left arm down
+  px(sx+22,sy-26,4,16,'#d9ac0e');                                  // right arm raised
+  px(sx+20,sy-32,8,7,'#f5e04b');                                   // trophy held high
+  px(sx+22,sy-34,4,3,'#fff3b0');
+  px(sx+12,sy-24,8,8,'#e8c93e');px(sx+11,sy-26,10,4,'#d9ac0e');    // head + crown band
+  px(sx+12,sy-28,2,3,'#d9ac0e');px(sx+15,sy-29,2,4,'#d9ac0e');px(sx+18,sy-28,2,3,'#d9ac0e');
+  if(Math.sin(frame/30)>0.3)px(sx+23,sy-33,2,1,'#ffffff');         // glint
+}
+function drawFerries(cx,cy){
+  const boats=[
+    [77*16,(208+Math.sin(frame/420)*24)*16,1],
+    [158*16,(214+Math.cos(frame/380)*34)*16,-1],
+    [76*16,(180+Math.cos(frame/500)*20)*16,1]];
+  for(const [bx,by2,dir] of boats){
+    const sx=bx-cx,sy=by2-cy;
+    if(sx<-70||sx>W+70||sy<-70||sy>H+70)continue;
+    px(sx-11,sy+13,22,3,'rgba(240,248,255,0.3)');                  // wake
+    px(sx-12,sy,24,12,'#f4f0e0');px(sx-12,sy+8,24,4,'#3d5a80');    // hull
+    px(sx-6,sy-6,12,7,'#c0392b');px(sx-4,sy-4,3,3,'#bfd8e8');px(sx+2,sy-4,3,3,'#bfd8e8');
+    px(sx+(dir>0?4:-8),sy-9,4,4,'#8f2a22');                        // stack
+    if(frame%40<20)px(sx+(dir>0?5:-7),sy-12,2,2,'rgba(220,220,220,0.5)');
+  }
+}
 const decor=[
   {f:drawTemple,x:57.5*16,y:24*16-96},
+  {f:drawMonument,x:73*16,y:243*16},
+  {f:drawSail,x:78*16,y:196.5*16},{f:drawSail,x:156*16,y:235.5*16},
+  {f:drawSail,x:160*16,y:190.5*16},{f:drawSail,x:70*16,y:228.5*16},
   {f:drawFlagship,x:74*16,y:24.5*16},
   {f:drawSail,x:40*16,y:35.5*16},{f:drawSail,x:40*16,y:40.5*16},{f:drawSail,x:40*16,y:45.5*16},
   {f:drawSail,x:59*16,y:51.5*16},
@@ -1430,7 +1543,7 @@ const decor=[
   {f:drawShop,x:126*16,y:159*16,c:'#2a8a80'},{f:drawShop,x:86*16,y:159*16,c:'#b56ad1'},
   // north row big storefronts
   {f:drawShop,x:87*16,y:142*16,c:'#c56a3d'},{f:drawShop,x:100*16,y:142*16,c:'#3d6a2a'},
-  {f:drawShop,x:105*16,y:142*16,c:'#3d6a2a'},{f:drawShop,x:115*16,y:142*16,c:'#5a7298'},
+  {f:drawShop,x:105*16,y:142*16,c:'#3d6a2a'},{f:drawShop,x:117*16,y:142*16,c:'#5a7298'},
   {f:drawShop,x:126*16,y:142*16,c:'#a83226'},
   // house row fronts (south rows)
   {f:drawHouseFront,x:86*16,y:167*16},{f:drawHouseFront,x:93*16,y:167*16},
@@ -1486,7 +1599,8 @@ const mini=document.createElement('canvas');mini.width=MW;mini.height=MH;
   const m=mini.getContext('2d');
   const cols={0:'#2a5f8f',8:'#20496e',1:'#e8d5a0',2:'#4f9e28',3:'#1f5c14',4:'#c8a86a',
     5:'#9c6b3f',6:'#8a8a9a',7:'#4f9e28',9:'#eef2f5',10:'#9aa0ad',11:'#eba0bc',12:'#d13b3b',
-    13:'#9c6b3f',14:'#3a3a44',16:'#5a5f6e',17:'#b0824f',18:'#9aa0ad',19:'#33502c',20:'#7a808d',22:'#8a5a30'};
+    13:'#9c6b3f',14:'#3a3a44',16:'#5a5f6e',17:'#b0824f',18:'#9aa0ad',19:'#33502c',20:'#7a808d',22:'#8a5a30',
+    21:'#8a6a4a',23:'#6e7484',24:'#b09a6a'};
   for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){
     m.fillStyle=cols[T(x,y)]||'#4f9e28';
     m.fillRect(x,y,1,1);
@@ -1511,8 +1625,11 @@ const walkers=[
   {name:'Sho',  sx2:120,sy2:157,style:{skin:'#f5e0c8',hs:'hood',hair:'#3d4a66',top:'#3d4a66',jacket:'#2a3550',pants:'#1a1c2c'},lines:["...the beast isle glows","at night.","I've seen it. Twice."]},
   {name:'Vera', sx2:96, sy2:171,style:{skin:'#e8b88a',hs:'long',hair:'#3d2b1e',hairD:'#2a1c10',top:'#e8734a',jacket:'#c95a35',earring:true,glasses:true},lines:["First time visiting the big","city!","Everything is so TALL."]},
   {name:'Omar', sx2:128,sy2:183,style:{skin:'#8a5a3a',hs:'flat',hair:'#1a1c2c',top:'#f4f4f4',jacket:'#3d4a66',belt:'#1a1c2c',glasses:true,pants:'#3d4a66'},lines:["Tower job. Big deadlines.","Small breaks.","At least the view's nice."]},
-  {name:'Lulu', sx2:110,sy2:203,style:{skin:'#f5d5a8',hs:'bun',hair:'#e85d75',hairD:'#c04a5a',top:'#7fe3dc',stripe:'#f4f4f4',blush:true},lines:["The boardwalk at sunset is","the best spot in the whole","city. Don't tell everyone."]},
-  {name:'Chip', sx2:138,sy2:193,style:{skin:'#c98f5e',hs:'cap',hair:'#2f9e44',hairD:'#1f7a30',top:'#e8c93e',straps:'#8a5a30',freckles:true},lines:["I skate the midtown avenues","every morning.","Smoothest stone on the","island!"]}
+  {name:'Lulu', sx2:110,sy2:209,style:{skin:'#f5d5a8',hs:'bun',hair:'#e85d75',hairD:'#c04a5a',top:'#7fe3dc',stripe:'#f4f4f4',blush:true},lines:["The boardwalk at sunset is","the best spot in the whole","city. Don't tell everyone."]},
+  {name:'Chip', sx2:138,sy2:193,style:{skin:'#c98f5e',hs:'cap',hair:'#2f9e44',hairD:'#1f7a30',top:'#e8c93e',straps:'#8a5a30',freckles:true},lines:["I skate the midtown avenues","every morning.","Smoothest stone on the","island!"]},
+  {name:'Faye', sx2:110,sy2:229,style:{skin:'#f5e0c8',hs:'pony',hair:'#2e2e3a',hairD:'#1a1c2c',top:'#c0392b',jacket:'#8f2a22',earring:true,pants:'#1a1c2c'},lines:["Lower city born and raised.","You can hear three street","musicians from my window."]},
+  {name:'June', sx2:86, sy2:219,style:{skin:'#e8b88a',hs:'beanie',hair:'#5aa0c5',top:'#3d5a80',stripe:'#f4f4f4',freckles:true},lines:["I fish off the west piers.","The ferries wave at me.","I always wave back."]},
+  {name:'Rocco',sx2:180,sy2:196,style:{skin:'#8a5a3a',hs:'flat',hair:'#3d2b1e',top:'#6a5a40',jacket:'#54341a',beard:'#3d2b1e',belt:'#1a1c2c'},lines:["Eastside's quieter. We like","it that way.","Best bagels though. Facts."]}
 ].map((w,i)=>({...w,
   x:w.sx2*TS+8,y:w.sy2*TS+8,
   dir:'down',t:i*17,pause:0,blocked:false}));
@@ -2781,6 +2898,7 @@ function drawWorld(){
     drawTile(T(x,y),x*TS-cx,y*TS-cy,x,y);
   }
   drawAmbient(cx,cy);
+  drawFerries(cx,cy);
   drawClouds(cx,cy);
   // decorations
   for(const d of decor){
@@ -2902,7 +3020,7 @@ function drawMap(){
     if(has){text('✓',sx,sy-5,P.white,9,'center')}
     text(spotLabels[n.id]||'',sx,sy+9,P.white,7,'center');
   }
-  const extras=[[52,86,'SAKURA ISLE'],[190,90,'BEAST ISLE'],[120,88,'TEAM PLAZA'],[104,156,'THE CITY'],[116,188,'MIDTOWN & PARK']];
+  const extras=[[52,86,'SAKURA ISLE'],[190,90,'BEAST ISLE'],[120,88,'TEAM PLAZA'],[104,156,'THE CITY'],[116,188,'MIDTOWN & PARK'],[116,232,'LOWER CITY'],[188,214,'EASTSIDE'],[74,244,'MONUMENT ISLE']];
   for(const [ex,ey,lbl] of extras){
     text(lbl,mx+ex/MW*mw2,my+ey/MH*mh2,'rgba(244,244,244,0.85)',7,'center');
   }
