@@ -380,9 +380,23 @@ let crowned=false;
 let tamed=false; // the beast of Beast Isle
 let coinCount=0;
 // kindness quests: 0=not started, 1=asked, 2=item in hand, 3=delivered
-const quests={mouse:0,bread:0,tea:0};
-let carryItem=null; // 'trophy' | 'roll' | 'tea'
-const trophyCount=()=>((quests.mouse>=2)?1:0)+((quests.bread>=3)?1:0)+((quests.tea>=3)?1:0);
+const quests={mouse:0,bread:0,tea:0,ball:0,letter:0,grip:0,fish:0,flower:0,coinq:0,recipe:0,book:0,cheer:0};
+let carryItem=null;
+const trophyCount=()=>{
+  let n=quests.mouse>=2?1:0;
+  for(const k of ['bread','tea','ball','letter','grip','fish','flower','coinq','recipe','book','cheer'])
+    if(quests[k]>=3)n++;
+  return n;
+};
+function askQuest(key,askLines,yesLines,item){
+  dialog={idx:0,lines:askLines,opts:[
+    {label:"Of course!",fn:()=>{quests[key]=1;if(item&&!carryItem)carryItem=item;saveGame();say(yesLines)}},
+    {label:"Maybe later.",fn:()=>{say(["No worries at all!"])}}
+  ]};
+  state='dialog';sfx.pop();
+}
+function gainItem(key,item,lines){quests[key]=2;if(!carryItem)carryItem=item;saveGame();sfx.coin();say(lines)}
+function questDone(key,item,lines){quests[key]=3;if(carryItem===item)carryItem=null;saveGame();sfx.win();say(lines)}
 // ---------- teams ----------
 let team=null;
 const teams=[
@@ -1706,29 +1720,38 @@ function drawTrophyCup(x,y,big){
   px(x+1*s,y+1*s,2*s,1*s,'#fff8c0');
 }
 function drawRoomTrophy(){
-  roomFrame('#4a3a5a','#8a7a5a');
+  roomFrame('#4a3a2a','#8a7a5a');
   for(let i=0;i<10;i++)px(20,84+i*24,W-40,1,'#7a6a4a');
-  // banners
-  for(const bx of [60,380]){px(bx,18,26,40,'#8e44ad');px(bx,52,26,8,'#6a2a8a');px(bx+9,28,8,8,P.gold)}
-  // red carpet to the master's desk
-  px(210,84,60,192,'#a83226');px(216,84,48,192,'#c0453a');
-  // master's desk
-  px(180,84,120,36,'#6b4423');px(180,84,120,6,'#8a5a30');px(180,116,120,4,'rgba(0,0,0,0.15)');
-  drawTrophyCup(196,70,false);drawTrophyCup(272,70,false);
-  // pedestal wings: earned trophies shine, empty ones wait
+  // top shelf of old bronze trophies
+  px(24,52,W-48,10,'#6b5a3a');
+  for(let i=0;i<14;i++){const tx=36+i*31;
+    px(tx,42,8,10,'#a8894a');px(tx-2,42,2,4,'#a8894a');px(tx+8,42,2,4,'#a8894a');px(tx+1,52,6,2,'#8a6f3d')}
+  // hall crest
+  px(222,20,36,28,'#c9b380');px(228,26,24,16,'#8a6f3d');drawTrophyCup(234,28,false);
+  // center aisle carpet
+  px(214,68,52,H-108,'#8a6f3d');px(220,68,40,H-108,'#a8894a');
+  // the Trophy Master's spot is at the top of the aisle
+  // two wings of red display cases — they fill as kindness spreads
   const earned=trophyCount();
-  const spots=[[70,140],[70,200],[130,170],[350,140],[350,200],[390,170]];
-  for(let i=0;i<spots.length;i++){
-    const [px2,py2]=spots[i];
-    px(px2-4,py2+34,32,5,'rgba(0,0,0,0.2)');
-    px(px2-2,py2+14,28,22,'#9aa0ad');px(px2,py2+16,24,18,'#b5bbc8');px(px2-2,py2+14,28,3,'#c5cbd8');
-    if(i<earned){drawTrophyCup(px2+6,py2-4,true);
-      if(frame%40<20)px(px2+4,py2-8,2,2,'#fff8c0');
-    }else{px(px2+8,py2+2,10,8,'rgba(0,0,0,0.15)')}
+  let caseN=0;
+  for(const wing of [46,286]){
+    for(let r=0;r<3;r++)for(let c=0;c<2;c++){
+      const cx2=wing+c*76,cy2=96+r*62;
+      px(cx2-2,cy2+46,64,5,'rgba(0,0,0,0.2)');
+      px(cx2,cy2,60,44,'#a83226');px(cx2,cy2,60,4,'#c0453a');
+      px(cx2+5,cy2+6,50,26,'#1e2438');
+      px(cx2+7,cy2+8,14,6,'rgba(255,255,255,0.10)');
+      px(cx2+5,cy2+34,50,7,'#8f2a22');px(cx2+22,cy2+36,16,4,'#f5e04b');
+      if(caseN<earned){
+        drawTrophyCup(cx2+24,cy2+14,false);
+        if((frame+caseN*13)%50<25)px(cx2+20,cy2+10,2,2,'#fff8c0');
+      }
+      caseN++;
+    }
   }
-  // the mouse waits here once you've agreed to help
-  if(quests.mouse>=1)drawMouse(320,110);
-  text(earned+' kindness '+(earned===1?'trophy':'trophies')+' earned',W/2,H-56,'#e8d5a0',9,'center');
+  // the mouse waits by the aisle once you've agreed to help
+  if(quests.mouse>=1)drawMouse(250,130);
+  text(earned+' / 12 kindness trophies',W/2,H-52,'#e8d5a0',9,'center');
 }
 const INTERIORS={
   trophy:{draw:drawRoomTrophy,npc:{x:240,y:70,color:'#8e44ad',
@@ -1743,9 +1766,19 @@ const INTERIORS={
       }
     },
     lines:["..."]},
-    blocks:[[180,84,120,36],[66,140,32,30],[66,200,32,30],[126,170,32,30],[346,140,32,30],[346,200,32,30],[386,170,32,30],[54,18,38,44],[374,18,38,44]]},
+    blocks:[[46,96,136,44],[46,158,136,44],[46,220,136,44],[286,96,136,44],[286,158,136,44],[286,220,136,44],[24,42,432,22],[210,60,60,30]]},
   library:{draw:drawRoomLibrary,npc:{x:80,y:70,color:'#8a7a5a',
     style:{skin:'#e8c8a8',hs:'bun',hair:'#b0b8c5',hairD:'#8a8a9a',top:'#6a5a7a',jacket:'#4a3a5a',glasses:true,pants:'#3a3a45'},
+    onTalk:()=>{
+      if(quests.flower===2){questDone('flower','flower',
+        ["Sakura blossoms... from the","isle itself.","(She places the sprig by the","reading corner and smiles for","the first time in weeks.)","Thank you. The Trophy Master","will hear of this."]);return}
+      if(quests.book===1){gainItem('book','book',
+        ["A storybook for granny's","grandkids? Take our very","best one —","'The Mouse Who Carried","a Mountain.' A classic."]);return}
+      if(quests.flower===0){askQuest('flower',
+        ["This library needs a touch","of spring...","Could you bring me a sakura","sprig from the blossom isle?","Sana tends the prettiest","trees."],
+        ["Wonderful! Sana's isle is","west of the crossroads!"]);return}
+      say(INTERIORS.library.npc.lines);
+    },
     lines:["Welcome to the Island Library.","Every champion's story is","written here...","They say the beast guards a","warm heart. And coins hide","in flower patches!"]},
     extras:[{x:150,y:216,color:'#5aa0c5',lines:["Shh... this adventure book","has NINE badges in it.","Sounds familiar..."]},
             {x:320,y:230,color:'#b05a8a',lines:["I've read every book on the","middle shelf. Twice."]}],
@@ -1770,6 +1803,12 @@ const INTERIORS={
     blocks:[[34,26,58,52],[120,84,130,38],[60,170,120,52],[280,150,160,44],[300,220,140,36]]},
   arcade:{draw:drawRoomArcade,npc:{x:240,y:150,color:'#3b5bd1',
     style:{skin:'#8a5a3a',hs:'spiky',hair:'#b56ad1',hairD:'#8a44ad',top:'#2e2e3a',jacket:'#3b5bd1',stripe:'#7fffd4',glasses:true,pants:'#1a1c2c'},
+    onTalk:()=>{
+      if(quests.grip===1){gainItem('grip','grip',
+        ["An orange paddle grip? Yeah,","it turned up in the prize","bin last week!","Kept meaning to return it.","Tell Pip the claw says","sorry."]);return}
+      dialog={lines:INTERIORS.arcade.npc.lines,idx:0,opts:INTERIORS.arcade.npc.opts};
+      state='dialog';sfx.pop();
+    },
     lines:["Dex's Arcade! All the island","sports, no sunburn.","Wanna replay a challenge?"],
     opts:[
       {label:'Beach Sprint',fn:()=>startGame(npcs.find(n=>n.id==='sprint'))},
@@ -1782,6 +1821,17 @@ const INTERIORS={
     blocks:[[34,40,216,74],[46,150,64,70],[122,150,64,70],[300,40,122,78],[408,150,44,90]]},
   ramen:{draw:drawRoomRamen,npc:{x:240,y:105,color:'#e8649c',
     style:{skin:'#e8b88a',hs:'flat',hair:'#e8649c',hairD:'#c04a7a',top:'#f4f4f4',headband:'#c0392b',apron:'#3d3020',pants:'#3d3020'},
+    onTalk:()=>{
+      if(quests.fish===2){questDone('fish','fish',
+        ["THAT is a fish! Moro never","misses.","Tonight's broth will sing!","First bowl's yours, and the","Trophy Master hears of","this kindness!"]);return}
+      if(quests.recipe===1){questDone('recipe','note',
+        ["A note... from Master Gou?","(reads)","...THUNDER. Of course.","THUNDER!","(The chef cries a single,","spicy tear.) Thank you."]);return}
+      if(quests.fish===0){askQuest('fish',
+        ["The lunch rush cleaned me","out of fresh fish!","Moro at the harbor always","has the best catch...","could you run and get one?"],
+        ["You're saving lunch! Moro's","on the harbor quay!"]);return}
+      if(quests.fish===1){say(["Moro's at Harbor Town —","the quay by the boats!"]);return}
+      say(INTERIORS.ramen.npc.lines);
+    },
     lines:["Welcome to the Whirlpool","Noodle Bar!","Today's special: volcano","broth with cloud noodles.","On the house for the hero","who tamed the beast!"]},
     extras:[{x:100,y:140,color:'#8a5a30',lines:["Slurping loudly is a","compliment here.","SLUUURP. See?"]},
             {x:380,y:200,color:'#5aa0c5',lines:["The chef once fed the beast","a thousand noodles.","True story. Probably."]}],
@@ -1791,8 +1841,14 @@ const INTERIORS={
     onTalk:()=>{
       if(quests.tea===1){
         quests.tea=2;if(!carryItem)carryItem='tea';saveGame();sfx.coin();
-        say(["Old Tomo wants my bone-warm","tea? That rascal!","Here — a full flask, wrapped","snug so it stays hot.","Tell him he still owes me a","dance from the festival of","'62!"]);
-      }else say(INTERIORS.house.npc.lines);
+        say(["Old Tomo wants my bone-warm","tea? That rascal!","Here — a full flask, wrapped","snug so it stays hot.","Tell him he still owes me a","dance from the festival of","'62!"]);return}
+      if(quests.book===2){questDone('book','book',
+        ["'The Mouse Who Carried a","Mountain'! Oh, the grandkids","will squeal!","You dear, DEAR thing.","Extra cookie for you — and","a word with the Trophy","Master, I promise."]);return}
+      if(quests.book===0){askQuest('book',
+        ["My grandkids visit Sunday","and I've read them every","book in this house twice!","Could you borrow a good one","from the city library for","me?"],
+        ["Bless you! Ask the librarian","for something magical."]);return}
+      if(quests.book===1){say(["The library's on the north","row of shops, dear!"]);return}
+      say(INTERIORS.house.npc.lines);
     },
     lines:["Oh, hello dear! Come in,","come in. Tea's warm.","My grandmother helped build","the torii gate at the plaza.","This island loves you —","I can tell."]},
     extras:[{x:395,y:172,cat:true,color:'#e8923a',lines:["(A round orange cat blinks","slowly at you.)","...You feel deeply approved."]}],
@@ -1882,6 +1938,22 @@ function drawCarry(sx,sy){
     px(sx-3,y+1,6,7,'#bfe4e8');px(sx-2,y,4,2,'#8a5a30');
     px(sx+3,y+3,2,3,'#bfe4e8');
     drawSteam(sx,y-2);
+  }else if(carryItem==='ball'){
+    px(sx-4,y+1,8,7,'#c0392b');px(sx-3,y,6,2,'#c0392b');
+    px(sx-4,y+3,8,2,'#f4f4f4');px(sx-2,y+1,2,2,'#ff8f85');
+  }else if(carryItem==='letter'){
+    px(sx-5,y+2,10,7,'#f4f0e0');px(sx-5,y+2,10,1,'#c9b380');
+    px(sx-5,y+2,5,4,'rgba(0,0,0,0.06)');px(sx-1,y+5,2,2,'#c0392b');
+  }else if(carryItem==='grip'){
+    px(sx-2,y+1,4,8,'#e67e22');px(sx-2,y+1,4,2,'#b35f10');px(sx-1,y+4,2,2,'#f5c542');
+  }else if(carryItem==='fish'){
+    px(sx-5,y+2,8,5,'#5aa0c5');px(sx+3,y+3,3,3,'#3d7a9a');px(sx-3,y+3,1,1,'#1a1c2c');
+  }else if(carryItem==='note'){
+    px(sx-4,y+2,8,6,'#f4f0e0');px(sx-3,y+4,6,1,'#8a6238');px(sx-3,y+6,6,1,'#8a6238');
+  }else if(carryItem==='book'){
+    px(sx-4,y+1,8,7,'#c0392b');px(sx-4,y+1,2,7,'#8f2a22');px(sx-1,y+3,4,1,'#f5e04b');
+  }else if(carryItem==='flower'){
+    px(sx-1,y+3,2,5,'#2f9e44');px(sx-3,y,3,3,'#f5a8c0');px(sx+1,y+1,3,3,'#ffd7ef');px(sx-2,y+1,1,1,'#f5e04b');
   }
 }
 
@@ -1999,6 +2071,31 @@ function updateWorld(){
       if(Math.abs(player.x-w.x)<22&&Math.abs(player.y-w.y)<22){
         w.pause=140;
         w.dir=player.x<w.x?'left':player.x>w.x+8?'right':player.y<w.y?'up':'down';
+        // kindness moments with the citizens
+        if(w.name==='Koji'&&quests.coinq<3){
+          dialog={idx:0,lines:["One coin. ONE coin short of","the claw machine plushie...","It's the green one. I've","named him already."],
+            opts:[
+              {label:"Here, take a coin!",fn:()=>{
+                if(coinCount>0){coinCount--;quests.coinq=3;saveGame();sfx.win();
+                  say(["REALLY?! You're the kindest","person in this whole city!","Sir Plush shall be freed!","The Trophy Master needs to","hear about you!"])}
+                else say(["(You pat your empty pockets.)","Come back when you've found","a coin!"]);
+              }},
+              {label:"Not right now.",fn:()=>{say(["I'll be here. Saving.","Coin by coin..."])}}
+            ]};
+          state='dialog';sfx.pop();return;
+        }
+        if(w.name==='Gou'){
+          if(quests.recipe===0){askQuest('recipe',
+            ["My old broth secret — one","word: THUNDER.","My student at the noodle bar","needs this note. My knees","don't do lunch rushes","anymore. Deliver it?"],
+            ["Good. Tell them Gou is","proud. But mostly THUNDER."],'note');return}
+          if(quests.recipe===1){say(["The noodle bar is right on","this street. THUNDER!"]);return}
+          if(quests.recipe>=3){say(["I can smell the thunder","from here. Perfect."]);return}
+        }
+        if(w.name==='Sho'&&quests.cheer<3){
+          if(tamed){quests.cheer=3;saveGame();sfx.win();
+            say(["...you TAMED it? The glowing","thing on the dark isle?","It just... wanted belly rubs?","I can sleep again. THANK YOU.","The Trophy Master hears","about this tonight."]);return}
+          say(["...the beast isle glows","at night.","I've seen it. Twice.","I haven't slept properly","in weeks..."]);return;
+        }
         say(w.lines);return;
       }
     }
@@ -2069,6 +2166,39 @@ function talkTo(n){
   if(n.recruit){recruitTalk(n);return}
   if(n.id==='v2'){breadTalk(n);return}
   if(n.id==='v1'){teaTalk(n);return}
+  // kindness quest moments woven through the island
+  if(n.id==='v3'){ // Kip and his runaway beach ball
+    if(quests.ball===0){askQuest('ball',
+      ["My beach ball! The wind","stole it — POOF — gone!","Koa said it washed up by","the surf. Could you get it","back for me?"],
+      ["You're the best! Koa's at","the west end of the beach!"]);return}
+    if(quests.ball===1){say(["Koa has my ball — west end","of this very beach!"]);return}
+    if(quests.ball===2){questDone('ball','ball',
+      ["MY BALL! You found it!","You're officially my hero.","The Trophy Master should","hear about this!"]);return}
+    if(quests.ball===3){say(["Me and this ball are never","separating again."]);return}
+  }
+  if(n.id==='v4'){ // Sana: letter to send, blossoms to share
+    if(quests.flower===1){gainItem('flower','flower',
+      ["A blossom for the librarian?","Of course — take the prettiest","sprig on the isle!"]);return}
+    if(quests.letter===0){askQuest('letter',
+      ["I wrote a letter to my pen","pal Yuki, up on the ice wall...","but my sandals are NOT snow","sandals. Would you carry it","up the mountain?"],
+      ["Thank you! Yuki trains by","the ice wall on the summit.","Bundle up!"],'letter');return}
+    if(quests.letter===1){say(["Yuki's up at the ice wall,","west side of the summit!"]);return}
+    if(quests.letter===2||quests.letter===3){say(["Yuki wrote back already!","Fastest mail on the island —","that's you!"]);return}
+  }
+  if(n.id==='surf'&&quests.ball===1){gainItem('ball','ball',
+    ["This red-and-white ball?","Washed right up on my board!","Take it back to Kip, brah —","tell him the ocean says hi."]);return}
+  if(n.id==='climb'&&quests.letter===1){quests.letter=3;if(carryItem==='letter')carryItem=null;saveGame();sfx.win();
+    say(["A letter... from Sana?!","(Yuki reads it twice, then","hugs it.)","Thank you for climbing all","this way. Truly kind."]);return}
+  if(n.id==='fishing'&&quests.fish===1){gainItem('fish','fish',
+    ["The noodle chef needs a","fresh catch? Say no more.","This beauty jumped into my","bucket this morning —","straight from the bay!"]);return}
+  if(n.id==='pong'){
+    if(quests.grip===0){askQuest('grip',
+      ["Disaster! My lucky paddle","grip is GONE.","I heard it ended up in the","arcade prize bin, of all","places. Rescue it for me?"],
+      ["You're a lifesaver! Dex runs","the arcade in the city!"]);return}
+    if(quests.grip===1){say(["The grip's at Dex's arcade","in the city — hurry!"]);return}
+    if(quests.grip===2){questDone('grip','grip',
+      ["MY LUCKY GRIP! The magic is","back in my paddle!","Kindest rescue in castle","history. Tell the Trophy","Master I said so!"]);return}
+  }
   if(n.villager){say(n.lines);return}
   if(n.id==='delta'){
     if(crowned)say(n.done);
