@@ -1216,6 +1216,36 @@ function drawVending(sx,sy){
   px(sx+2,sy+8,8,6,'#1a1c2c');px(sx+12,sy+6,4,8,'#8f2a22');
   if(frame%80<40)px(sx+13,sy-9,2,2,'#7fffd4');
 }
+function drawTrophyHouse(sx,sy){
+  // the shrine of kindness: tiered teal roofs, gold trim, a great cup on top
+  // sits over the 7x5 building block (112x80 px)
+  px(sx-8,sy+34,128,10,'#2a4436');                 // lower eave
+  px(sx-4,sy+18,120,18,'#3d8a72');
+  for(let i=0;i<14;i++)px(sx-4+i*9,sy+20,5,3,'#57ab8e'); // roof scales
+  px(sx+8,sy+2,96,18,'#3d8a72');                   // upper roof
+  for(let i=0;i<11;i++)px(sx+10+i*9,sy+5,5,3,'#57ab8e');
+  px(sx+4,sy+16,104,5,'#2a4436');
+  px(sx+24,sy-12,64,16,'#3d8a72');                 // crown roof
+  for(let i=0;i<7;i++)px(sx+26+i*9,sy-9,5,3,'#57ab8e');
+  px(sx+20,sy+2,72,4,'#2a4436');
+  px(sx+50,sy-8,12,4,P.gold);                      // ridge trim
+  // the great trophy on the rooftop
+  px(sx+46,sy-34,20,12,'#e8c93e');px(sx+42,sy-32,4,8,'#e8c93e');px(sx+66,sy-32,4,8,'#e8c93e');
+  px(sx+50,sy-22,12,4,'#d9ac0e');px(sx+52,sy-18,8,4,'#b8860b');
+  px(sx+49,sy-32,5,3,'#fff8c0');
+  if(frame%50<25)px(sx+44,sy-36,3,3,'#fff8c0');
+  // flanking mini-trophies on the eaves
+  for(const tx of [sx-2,sx+102]){
+    px(tx,sy+8,8,6,'#d9ac0e');px(tx-2,sy+9,2,3,'#d9ac0e');px(tx+8,sy+9,2,3,'#d9ac0e');px(tx+2,sy+14,4,3,'#b8860b');
+  }
+  // face: dark wood, gold door frame, lattice windows
+  px(sx+38,sy+44,36,4,P.gold);
+  px(sx+12,sy+50,20,16,'#e8e0c8');px(sx+80,sy+50,20,16,'#e8e0c8');
+  for(let i=0;i<4;i++){px(sx+14+i*5,sy+52,1,12,'#8a7a5a');px(sx+82+i*5,sy+52,1,12,'#8a7a5a')}
+  px(sx+40,sy+48,2,30,P.gold);px(sx+70,sy+48,2,30,P.gold);
+  // stone steps
+  px(sx+44,sy+80,24,3,'#9aa0ad');px(sx+46,sy+83,20,3,'#7a808d');
+}
 function drawStatue(sx,sy,col){
   // golden champion figure atop the pedestal
   px(sx+4,sy-10,8,3,'#d9ac0e');            // hair
@@ -1241,6 +1271,7 @@ const decor=[
   {f:drawCastle,x:53.5*16,y:128*16-8},
   {f:drawBeast,x:187*16,y:93*16},
   {f:drawTorii,x:120*16-16,y:84*16},
+  {f:drawTrophyHouse,x:117*16-8,y:79*16},
   // team plaza statues
   {f:drawStatue,x:116*16,y:87*16,c:'#e74c3c'},{f:drawStatue,x:124*16,y:87*16,c:'#3b82d1'},
   {f:drawStatue,x:116*16,y:93*16,c:'#2f9e44'},{f:drawStatue,x:124*16,y:93*16,c:'#f1c40f'},
@@ -1333,6 +1364,124 @@ function drawWalkers(cx,cy){
     if(sx<-30||sx>W+30||sy<-30||sy>H+30)continue;
     shadow(w.x-cx,w.y+8-cy,7,3);
     drawPersonEx(sx,sy,w.dir,w.pause>0?0:(w.t/9)|0,w.style);
+  }
+}
+
+// ---------- the library's books: six stories, ten chapters each ----------
+const BOOKS=[
+{title:'The Mouse Who Carried a Mountain',color:'#c0392b',chapters:[
+ ['An Acorn',['A very small mouse found a','very large acorn.','"Too heavy," said everyone.']],
+ ['One Step',['The mouse pushed the acorn','one whisker-length.','Then he rested. Then again.']],
+ ['Laughter',['The gulls laughed at him.','"A mouse moving mountains!"','The mouse kept pushing.']],
+ ['The Hill',['By autumn the acorn sat at','the top of the hill.','The gulls stopped laughing.']],
+ ['The Storm',['A storm rolled the acorn all','the way back down.','The mouse looked at it a','long, long time.']],
+ ['Again',['Then he began to push.','One whisker-length.','Then he rested. Then again.']],
+ ['Friends',['A crab helped on Tuesday.','A sparrow helped on Friday.','Small friends. Small pushes.']],
+ ['The Oak',['Years passed. The acorn','became an oak on the hill.','Birds nested in it.']],
+ ['The Forest',['Acorns fell from the oak and','rolled everywhere.','A forest began.']],
+ ['The Mountain',['Now a green mountain of trees','stands where he pushed.','Small steps. Every time.','THE END']]]},
+{title:'Nine Badges',color:'#3b6bd1',chapters:[
+ ['Last Place',['Juniper finished the big race','dead last.','She heard the crowd cheer for','someone else.']],
+ ['The List',['That night she wrote a list:','every challenge the island','had. Nine of them.']],
+ ['Falling',['She fell off the ice wall','fourteen times.','The fifteenth time she fell','slower.']],
+ ['Water',['The lagoon taught her to','breathe in rhythm.','In. Stroke. Out. Stroke.']],
+ ['Rain Day',['Some days she trained in','storms.','Some days she just watched','them and rested.']],
+ ['The Slump',['For a whole month, nothing','got better.','She kept showing up anyway.']],
+ ['One Badge',['Her first badge was the small','shiny kind.','It felt enormous.']],
+ ['Friends of Rivals',['She taught her rival to swim.','Her rival taught her to aim.','Both got faster.']],
+ ['The Ninth',['The last badge was not won','by racing.','It was earned carrying a','stranger\'s heavy basket.']],
+ ['Champion',['At the crowning, Juniper','looked for last place —','and cheered the loudest.','THE END']]]},
+{title:'The Beast Who Wanted Belly Rubs',color:'#2f9e44',chapters:[
+ ['The Dark Isle',['Nobody sailed to the dark','isle. Ever.','Something there glowed at','night.']],
+ ['The Glow',['The glow was two big eyes,','orange as embers.','They watched the far, happy','shore.']],
+ ['The Roar',['When boats came near, the','beast roared hello.','Boats do not understand','roars. They fled.']],
+ ['Lonely',['The beast practiced a quiet','hello. It came out as','thunder anyway.']],
+ ['The Kite',['One day a red kite crashed','on the isle.','A small child rowed out','after it.']],
+ ['Face to Face',['The beast held the kite in','one giant claw.','The child held out a hand.']],
+ ['The Rub',['The child scratched one scaly','belly-scale.','The beast fell over sideways','with joy.']],
+ ['Thunder Purr',['The purr shook coconuts from','trees on three islands.','Everyone came to look.']],
+ ['Lanterns',['Now boats visit with lanterns','and long brushes.','The isle glows warmer.']],
+ ['Home',['The beast still roars at','sunset.','Everyone knows it means','goodnight. THE END']]]},
+{title:'The Lighthouse Cat',color:'#e8923a',chapters:[
+ ['Keeper & Cat',['Keeper Odo ran the lighthouse.','His cat, Biscuit, ran Odo.']],
+ ['The Rule',['Biscuit\'s rule: never touch','the great lamp.','Biscuit touched everything','else.']],
+ ['Fog',['One night fog swallowed the','sea whole.','Odo was ashore. The lamp','was dark.']],
+ ['The Bell',['A ship\'s bell clanged, lost','in the gray.','Biscuit\'s ears went flat.']],
+ ['The Stairs',['One hundred spiral steps.','Biscuit took them in nine','glorious leaps.']],
+ ['The Lever',['The lamp lever was stiff and','tall.','Biscuit was neither.']],
+ ['All Nine Lives',['She jumped, dangled, swung —','and the lever dropped.','Light roared out to sea.']],
+ ['The Ship',['The ship turned in time.','On deck, a sailor swore he','saw a cat bowing.']],
+ ['Fish Forever',['The town voted Biscuit an','official keeper\'s pension:','one fish daily, forever.']],
+ ['The Nap',['Biscuit slept twenty hours','in the warm lamp room.','Heroes nap hard. THE END']]]},
+{title:'Thunder Broth',color:'#8e44ad',chapters:[
+ ['The Question',['Young cook Miso asked every','chef the same thing:','"What makes broth GREAT?"']],
+ ['Salt',['"Salt," said the first chef.','Miso salted until the sea','filed a complaint.','Not it.']],
+ ['Fire',['"Fire," said the second.','Miso cooked over a volcano','vent. Delicious. Dangerous.','Not it.']],
+ ['Time',['"Time," said the third.','Miso simmered a pot for one','entire year.','Closer. Not it.']],
+ ['The Mountain Hermit',['A hermit slurped Miso\'s broth','and said one word:','"Thunder."']],
+ ['Chasing Storms',['Miso cooked in storms, under','lightning, beside waterfalls.','The broth stayed quiet.']],
+ ['Home',['Tired, Miso went home.','Grandmother was cooking.','The kitchen shook with her','laughter.']],
+ ['Listening',['Pots banged. Family shouted.','The dog barked at the pot.','The broth... rumbled.']],
+ ['Thunder',['Miso finally heard it:','thunder is a full, loud,','happy kitchen.']],
+ ['One Word',['Miso\'s shop has one rule','painted on the wall:','"COOK LOUD. LOVE LOUDER."','THE END']]]},
+{title:'The Girl Who Raced the Wind',color:'#3bd1c4',chapters:[
+ ['The Challenge',['Pua raced everything: crabs,','clouds, her own shadow.','Only the wind never lost.']],
+ ['First Race',['She raced the wind down the','beach.','It stole her hat and won by','a mile.']],
+ ['Training',['She ran dunes until her legs','learned the sand\'s secrets.']],
+ ['Second Race',['Closer this time.','The wind still won — and','returned her hat, laughing.']],
+ ['The Old Runner',['An old runner told her:','"You cannot beat the wind.','You can only join it."']],
+ ['Puzzled',['Pua sat on the dunes for','three days, thinking.','The wind sat with her.']],
+ ['Joining',['She ran WITH the gusts,','resting when they rested,','flying when they flew.']],
+ ['The Third Race',['Nobody won the third race.','Nobody needed to.']],
+ ['Wind-Sister',['Fishermen say a girl runs the','shore at dawn','with sand spinning joyfully','around her.']],
+ ['Still Racing',['If your hat ever vanishes on','the beach, don\'t worry.','Pua will bring it back.','THE END']]]}
+];
+let bookUI=null; // {mode:'pick'|'read', sel, ch}
+function updateBooks(){
+  const b=bookUI;
+  if(b.mode==='pick'){
+    if(pressed('ArrowLeft')||pressed('a')||pressed('A')){b.sel=(b.sel+BOOKS.length-1)%BOOKS.length;sfx.cursor()}
+    if(pressed('ArrowRight')||pressed('d')||pressed('D')){b.sel=(b.sel+1)%BOOKS.length;sfx.cursor()}
+    if(action()){b.mode='read';b.ch=0;sfx.pop();return}
+    if(pressed('ArrowDown')||pressed('s')||pressed('S')||pressed('m')||pressed('M')){bookUI=null;state='inside';sfx.blip()}
+  }else{
+    if(pressed('ArrowRight')||pressed('d')||pressed('D')){if(b.ch<9){b.ch++;whoosh(0.08,0.08,800,3000)}}
+    if(pressed('ArrowLeft')||pressed('a')||pressed('A')){if(b.ch>0){b.ch--;whoosh(0.08,0.08,800,3000)}}
+    if(action()&&b.ch<9){b.ch++;whoosh(0.08,0.08,800,3000);return}
+    if((action()&&b.ch===9)||pressed('ArrowDown')||pressed('s')||pressed('S')||pressed('m')||pressed('M')){b.mode='pick';sfx.blip()}
+  }
+}
+function drawBooks(){
+  drawInside();
+  px(0,0,W,H,'rgba(16,19,34,0.82)');
+  const b=bookUI;
+  if(b.mode==='pick'){
+    text('THE ISLAND SHELF',W/2,26,P.gold,14,'center');
+    px(60,60,W-120,180,'#6b4423');px(66,66,W-132,168,'#54341a');
+    px(60,232,W-120,10,'#8a5a30');
+    for(let i=0;i<BOOKS.length;i++){
+      const bx=88+i*54,sel=i===b.sel;
+      const by=sel?86:96,bh=sel?130:114;
+      px(bx-3,by-3,42,bh+6,sel?'#f5e04b':'rgba(0,0,0,0.3)');
+      px(bx,by,36,bh,BOOKS[i].color);
+      px(bx,by,36,6,'rgba(255,255,255,0.25)');
+      px(bx+4,by+14,28,3,'#f4f0e0');px(bx+4,by+22,28,3,'#f4f0e0');
+      px(bx+8,by+bh-18,20,10,'#e8c93e');
+    }
+    text(BOOKS[b.sel].title,W/2,258,P.white,11,'center');
+    text('10 chapters',W/2,276,'rgba(244,244,244,0.7)',9,'center');
+    text('◄ ► choose · SPACE open · ▼ back',W/2,H-30,'rgba(244,244,244,0.8)',9,'center');
+  }else{
+    const bk=BOOKS[b.sel],ch=bk.chapters[b.ch];
+    px(50,34,W-100,H-78,'#f4ecd8');
+    px(50,34,W-100,6,'#d8ccb0');px(50,H-50,W-100,6,'#d8ccb0');
+    px(W/2-1,40,2,H-96,'rgba(0,0,0,0.08)');
+    text(bk.title,W/2,48,'#6b4423',11,'center');
+    text('Chapter '+(b.ch+1)+' of 10 — '+ch[0],W/2,70,'#8a6238',10,'center');
+    px(90,86,W-180,1,'#d8ccb0');
+    ch[1].forEach((ln,i)=>text(ln,W/2,104+i*22,'#3d2b14',11,'center'));
+    if(b.ch===9)text('☆',W/2,104+ch[1].length*22+8,'#b8860b',12,'center');
+    text('◄ ► turn page · ▼ close book',W/2,H-34,'rgba(244,244,244,0.8)',9,'center');
   }
 }
 
@@ -1902,6 +2051,17 @@ function updateInside(){
         return;
       }
     }
+    // browse the library shelves
+    if(interior===INTERIORS.library){
+      const shelves=[[180,60],[276,60],[372,60],[180,150],[276,150],[372,150]];
+      for(let i=0;i<shelves.length;i++){
+        const [sx2,sy2]=shelves[i];
+        if(ipx>sx2-10&&ipx<sx2+96&&ipy>sy2+50&&ipy<sy2+100){
+          bookUI={mode:'pick',sel:i,ch:0};
+          state='books';sfx.pop();return;
+        }
+      }
+    }
   }
 }
 function drawInside(){
@@ -1920,7 +2080,10 @@ function drawInside(){
   shadow(ipx,ipy+8,7,3);
   drawHero(ipx-8,ipy-8,player.dir,player.walk,0);
   drawCarry(ipx,ipy);
-  text('walk down through the door to leave',W/2,H-22,'rgba(244,244,244,0.6)',8,'center');
+  if(interior===INTERIORS.library)
+    text('SPACE at a shelf to read · walk down to leave',W/2,H-22,'rgba(244,244,244,0.6)',8,'center');
+  else
+    text('walk down through the door to leave',W/2,H-22,'rgba(244,244,244,0.6)',8,'center');
 }
 // what the hero is carrying, held proudly overhead
 function drawCarry(sx,sy){
@@ -3125,6 +3288,7 @@ function loop(){
     case 'title':updateTitle();drawTitle();break;
     case 'world':updateWorld();drawWorld();break;
     case 'inside':updateInside();if(interior)drawInside();else drawWorld();break;
+    case 'books':updateBooks();if(bookUI)drawBooks();else if(interior)drawInside();break;
     case 'map':updateMap();drawMap();break;
     case 'dialog':updateDialog();if(dialog)drawDialog();else drawWorld();break;
     case 'race':updateRace();if(mg)drawRace();else if(dialog)drawDialog();break;
